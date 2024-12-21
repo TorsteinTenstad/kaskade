@@ -1,25 +1,32 @@
-### Pawn
+# Cards
+
+## Pawn
+
 $1
 ^Forward
 
-### Knight
+## Knight
+
 $2
 ^Forward
 ^Forward to the right
 ^Forward to the left
 
-### Bishop
+## Bishop
+
 $3
 @Capturing
 ^Forward
 
-### Rook
+## Rook
+
 $3
 @Capturing
 ^Right to the nearest enemy
 ^Left to the nearest enemy
 
-### King
+## King
+
 $4
 ^Forward
 Allows spawning pieces around it
