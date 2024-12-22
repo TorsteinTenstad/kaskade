@@ -38,6 +38,7 @@ hand_step :: proc(ctx: ^Client_Context) {
 			return a.z_index > b.z_index
 		},
 	)
+	defer delete(sorted_indices)
 	hover_index, is_hovering := hand.hover_index.(int)
 	mouse_gui_position := rl.GetMousePosition()
 
@@ -151,7 +152,7 @@ hand_play :: proc(
 	msg: Client_To_Server = Client_To_Server {
 		card_action = Card_Action{card_idx = index, target = position},
 	}
-	send_package(ctx.socket, msg)
+	send_package(ctx.socket_event, msg)
 
 	return true
 }
@@ -174,6 +175,7 @@ hand_draw_gui :: proc(hand: ^Physical_Hand, camera: ^Camera) {
 			return a.z_index < b.z_index
 		},
 	)
+	defer delete(sorted_indices)
 	for i in sorted_indices {
 		card_draw_gui(&hand.cards[i])
 	}

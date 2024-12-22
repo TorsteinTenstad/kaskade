@@ -25,7 +25,7 @@ Client_To_Server :: struct {
 }
 
 Message :: struct($T: typeid) {
-	id:      int,
+	id:      Player_Id,
 	content: T,
 }
 
@@ -97,47 +97,77 @@ random_deck :: proc() -> Deck {
 	return deck
 }
 
-server_start :: proc() {
-	ctx: Server_Context
-
-	socket, listen_err := net.listen_tcp(
-		net.Endpoint{port = PORT, address = SERVER_ADDR},
-	)
-	assert(listen_err == nil, format(listen_err))
-
-	thread.create_and_start_with_data(&ctx, game_loop)
-
+listen_tcp :: proc(
+	ctx: ^Server_Context,
+	sockets: ^map[Player_Id]net.TCP_Socket,
+	endpoint: net.Endpoint,
+	is_event: bool,
+) {
+	socket_state, socket_state_err := net.listen_tcp(endpoint)
+	assert(socket_state_err == nil, format(socket_state_err))
 	for true {
-		client_socket, _, accept_err := net.accept_tcp(socket)
+		client_socket, ip, accept_err := net.accept_tcp(socket_state)
+		assert(accept_err == nil, format(accept_err))
+		id: u32
+		switch addr in ip.address {
+		case net.IP4_Address:
+			for i in 0 ..< 4 {
+				id += u32(addr[i]) << uint(i * 8)
+			}
+		case net.IP6_Address:
+		// TODO
 
-		if accept_err != nil do continue
-
-		client := Client {
-			socket = client_socket,
-			deck   = random_deck(),
 		}
 
-		for (len(client.hand.cards) < CARDS_MAX) {
-			hand_draw_from_deck(&client.hand, &client.deck)
+		if id == 0 do continue
+
+		player_id := Player_Id(id)
+		sockets[player_id] = client_socket
+		if player_id not_in ctx.players {
+			player := Player {
+				deck = random_deck(),
+			}
+			for _ in 0 ..< CARDS_MAX {
+				hand_draw_from_deck(&player.hand, &player.deck)
+			}
+			ctx.players[player_id] = player
 		}
-		append(&ctx.clients, client)
 
-		params := new(Handle_Client_Params)
-		params.socket = client.socket
-		params.message_queue = &ctx.message_queue
+		if !is_event do continue
 
-		thread.create_and_start_with_data(params, handle_client)
-
-		send_package(
-			client.socket,
-			Server_To_Client {
-				client_game_state = Client_Game_State {
-					hand = client.hand,
-					world = ctx.world,
-				},
-			},
-		)
+		params := Handle_Client_Params {
+			player_id     = player_id,
+			message_queue = &ctx.message_queue,
+			socket        = client_socket,
+		}
+		thread.create_and_start_with_data(&params, handle_client)
 	}
+}
+
+listen_event :: proc(raw_ptr: rawptr) {
+	ctx := (^Server_Context)(raw_ptr)
+	listen_tcp(
+		ctx,
+		&ctx.socket_event,
+		net.Endpoint{port = SERVER_PORT_EVENT, address = SERVER_ADDR},
+		true,
+	)
+}
+
+listen_state :: proc(raw_ptr: rawptr) {
+	ctx := (^Server_Context)(raw_ptr)
+	listen_tcp(
+		ctx,
+		&ctx.socket_state,
+		net.Endpoint{port = SERVER_PORT_STATE, address = SERVER_ADDR},
+		false,
+	)
+}
+
+server_start :: proc(ctx: ^Server_Context) {
+	thread.create_and_start_with_data(ctx, listen_event)
+	thread.create_and_start_with_data(ctx, listen_state)
+	thread.create_and_start_with_data(ctx, game_loop)
 }
 
 _game_loop_raw_ptr :: proc(raw_ptr: rawptr) {
@@ -153,17 +183,18 @@ _game_loop :: proc(ctx: ^Server_Context) {
 
 		msg := pop(&ctx.message_queue.queue)
 
-		// if msg.id != active_player_id do continue
+		//TODO: if msg.id != active_player_id do continue
 
 		game_step(ctx, msg)
 
-		for client in ctx.clients {
+		for player_id, socket in ctx.socket_state {
+			hand := ctx.players[Player_Id(player_id)].hand
 			send_package(
-				client.socket,
+				socket,
 				Server_To_Client {
 					client_game_state = Client_Game_State {
 						world = ctx.world,
-						hand = client.hand,
+						hand = hand,
 					},
 				},
 			)
@@ -177,18 +208,16 @@ game_loop :: proc {
 }
 
 game_step :: proc(ctx: ^Server_Context, msg: Message(Client_To_Server)) {
-	client_ids := slice.mapper(ctx.clients[:], proc(c: Client) -> int {
-			return int(c.socket)
-		})
-	client_idx, found := slice.linear_search(client_ids, msg.id)
-	if !found do return
-
-	client := &ctx.clients[client_idx]
+	if msg.id not_in ctx.players {
+		print("Player not found", msg.id)
+		return
+	}
+	player := &ctx.players[msg.id]
 
 	_, is_end_turn := msg.content.end_turn.(End_Turn)
 	if is_end_turn {
-		for len(client.hand.cards) < CARDS_MAX {
-			hand_draw_from_deck(&client.hand, &client.deck)
+		for len(player.hand.cards) < CARDS_MAX {
+			hand_draw_from_deck(&player.hand, &player.deck)
 		}
 	}
 
@@ -199,11 +228,12 @@ game_step :: proc(ctx: ^Server_Context, msg: Message(Client_To_Server)) {
 
 	card_action, is_card_action := msg.content.card_action.(Card_Action)
 	if is_card_action {
-		ordered_remove(&client.hand.cards, card_action.card_idx)
+		ordered_remove(&player.hand.cards, card_action.card_idx)
 	}
 }
 
 Handle_Client_Params :: struct {
+	player_id:     Player_Id,
 	message_queue: ^Message_Queue(Client_To_Server),
 	socket:        net.TCP_Socket,
 }
@@ -221,7 +251,7 @@ _handle_client :: proc(params: ^Handle_Client_Params) {
 		content: Client_To_Server
 		if recv_package(params.socket, &content) {
 			msg := Message(Client_To_Server) {
-				id      = int(params.socket), // TODO: use ip?
+				id      = params.player_id,
 				content = content,
 			}
 			append(&params.message_queue.queue, msg) // TODO: not thread safe!
@@ -239,11 +269,12 @@ handle_client :: proc {
 	_handle_client_raw_ptr,
 }
 
-network_step :: proc(ctx: ^Client_Context) {
+read_state_from_network :: proc(ctx_raw_ptr: rawptr) {
+	ctx := (^Client_Context)(ctx_raw_ptr)
+	for true {
+		content: Server_To_Client
 
-	content: Server_To_Client
-
-	if recv_package(ctx.socket, &content) {
+		if !recv_package(ctx.socket_state, &content) do continue
 		client_game_state, ok := content.client_game_state.(Client_Game_State)
 		assert(ok, "non-exhaustive")
 

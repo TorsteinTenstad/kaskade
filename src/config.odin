@@ -26,5 +26,6 @@ CARDS_MAX :: 6
 
 FONT_DEFAULT :: Font_Id.lilita_one_regular
 
-PORT :: 16143
-SERVER_ADDR :: net.IP4_Address{192, 168, 1, 113}
+SERVER_PORT_EVENT :: 16143
+SERVER_PORT_STATE :: 16144
+SERVER_ADDR :: net.IP4_Address{192, 168, 1, 109}

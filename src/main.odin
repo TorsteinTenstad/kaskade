@@ -18,11 +18,17 @@ main :: proc() {
 	rl.SetTraceLogLevel(rl.TraceLogLevel.NONE)
 
 	// Server
-	thread.create_and_start(server_start)
+	ctx: Server_Context
+	server_start(&ctx)
 
 	// Client
 	_client_context = client_context_create()
 	graphics_create(&_client_context)
+
+	thread.create_and_start_with_data(
+		&_client_context,
+		read_state_from_network,
+	)
 
 	for !rl.WindowShouldClose() {
 		_main_step(&_client_context)
@@ -33,10 +39,6 @@ main :: proc() {
 
 @(private = "file")
 _main_step :: proc(ctx: ^Client_Context) {
-
-	// Network
-	network_step(ctx)
-
 	// Camera
 	camera := &ctx.graphics.camera
 	camera_step(camera, &ctx.game_state.world)
