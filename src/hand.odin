@@ -3,10 +3,9 @@ package main
 
 import "core:math/linalg"
 import "core:math/rand"
-import "core:slice"
 import rl "vendor:raylib"
 
-PhysicalCard :: struct {
+Physical_Card :: struct {
 	card:            Card,
 	position:        FVec2,
 	scale:           f32,
@@ -16,24 +15,26 @@ PhysicalCard :: struct {
 }
 
 Deck :: struct {
-	cards: [dynamic]Card,
+	cards: [dynamic]Card_Id,
 }
 
 Hand :: struct {
-	cards:             [dynamic]PhysicalCard,
-	cards_regen:       int,
-	cards_max:         int,
+	cards: [dynamic]Card_Id,
+}
+
+Physical_Hand :: struct {
+	cards:             [dynamic]Physical_Card,
 	hover_index:       Maybe(int),
 	hover_target:      Maybe(IVec2),
 	hover_is_selected: bool,
 }
 
-hand_step :: proc(game_state: ^Game_State) {
-	hand := &game_state.hand
+hand_step :: proc(ctx: ^Client_Context) {
+	hand := &ctx.physical_hand
 
 	sorted_indices := sort_indices_by(
 		hand.cards[:],
-		proc(a: PhysicalCard, b: PhysicalCard) -> bool {
+		proc(a: Physical_Card, b: Physical_Card) -> bool {
 			return a.z_index > b.z_index
 		},
 	)
@@ -88,11 +89,10 @@ hand_step :: proc(game_state: ^Game_State) {
 	}
 }
 
-hand_step_player :: proc(game_state: ^Game_State) {
-	hand := &game_state.hand
-	deck := &game_state.deck
-	camera := &game_state.graphics.camera
-	world := &game_state.world
+hand_step_player :: proc(ctx: ^Client_Context) {
+	hand := &ctx.physical_hand
+	world := &ctx.game_state.world
+	camera := &ctx.graphics.camera
 	hover_index, is_hovering := hand.hover_index.(int)
 	mouse_gui_position := rl.GetMousePosition()
 
@@ -114,13 +114,7 @@ hand_step_player :: proc(game_state: ^Game_State) {
 			hand.hover_target = mouse_world_position
 
 			if rl.IsMouseButtonReleased(.LEFT) {
-				if hand_play(
-					hand,
-					hover_index,
-					deck,
-					world,
-					mouse_world_position,
-				) {
+				if hand_play(ctx, hover_index, world, mouse_world_position) {
 					// player_end_turn(game_state)
 				}
 				_hand_unhover(hand)
@@ -130,7 +124,7 @@ hand_step_player :: proc(game_state: ^Game_State) {
 }
 
 @(private = "file")
-_hand_unhover :: proc(hand: ^Hand) {
+_hand_unhover :: proc(hand: ^Physical_Hand) {
 	hand.hover_index = nil
 	hand.hover_target = nil
 	hand.hover_is_selected = false
@@ -147,41 +141,36 @@ _card_position :: proc(i: int, n: int) -> FVec2 {
 }
 
 hand_play :: proc(
-	hand: ^Hand,
+	ctx: ^Client_Context,
 	index: int,
-	deck: ^Deck,
 	world: ^World,
 	position: IVec2,
 ) -> bool {
-	if index >= len(hand.cards) do return false
+	if index >= len(ctx.physical_hand.cards) do return false
 
-	card := hand.cards[index]
-	positions := card_get_positions(&card.card)
-	if !slice.contains(positions, position) do return false
-	if !card.card.play(world, position) do return false
-
-	if !card.card.unbreakable {
-		ordered_remove(&hand.cards, index)
-		append(&deck.cards, card.card)
-		deck_shuffle(deck)
+	msg: Client_To_Server = Client_To_Server {
+		card_action = Card_Action{card_idx = index, target = position},
 	}
+	send_package(ctx.socket, msg)
+
 	return true
 }
 
 hand_draw_from_deck :: proc(hand: ^Hand, deck: ^Deck) -> bool {
-	if len(hand.cards) >= hand.cards_max do return false
+	if len(hand.cards) >= CARDS_MAX do return false
 
 	if len(deck.cards) == 0 do return false
 
 	card := pop(&deck.cards)
-	append(&hand.cards, PhysicalCard{card = card})
+	print("Drew card", card)
+	append(&hand.cards, card)
 	return true
 }
 
-hand_draw_gui :: proc(hand: ^Hand, camera: ^Camera) {
+hand_draw_gui :: proc(hand: ^Physical_Hand, camera: ^Camera) {
 	sorted_indices := sort_indices_by(
 		hand.cards[:],
-		proc(a: PhysicalCard, b: PhysicalCard) -> bool {
+		proc(a: Physical_Card, b: Physical_Card) -> bool {
 			return a.z_index < b.z_index
 		},
 	)
@@ -208,14 +197,7 @@ hand_draw_gui :: proc(hand: ^Hand, camera: ^Camera) {
 		)
 	}
 
-	cards_text := format(
-		"Cards: ",
-		len(hand.cards),
-		"/",
-		hand.cards_max,
-		" |+",
-		hand.cards_regen,
-	)
+	cards_text := format("Cards: ", len(hand.cards), "/", CARDS_MAX)
 	draw_text(cards_text, {16, 96})
 }
 

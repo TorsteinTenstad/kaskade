@@ -1,80 +1,43 @@
 #+vet unused shadowing using-stmt style semicolon
 package main
 
-import "core:encoding/json"
-import "core:math"
-import "core:math/rand"
+import "core:net"
 
-Game_State :: struct {
-	world:             World,
-	graphics:          Graphics,
-	hand:              Hand,
-	deck:              Deck,
-	current_entity_id: int,
+Server_Context :: struct {
+	world:         World,
+	clients:       [dynamic]Client,
+	message_queue: Message_Queue(Client_To_Server),
 }
 
-Serializable_Game_State :: struct {
-	entities:  [dynamic]Entity,
-	player_id: int,
+Client :: struct {
+	socket: net.TCP_Socket,
+	// message_queue: ^Message_Queue(Client_To_Server),
+	hand:   Hand,
+	deck:   Deck,
 }
 
-game_state_create :: proc() -> Game_State {
-	game_state := Game_State{}
-
-	// World
-	for _ in 0 ..< 2 {
-		position := i_vec_2(
-			math.floor(rand.float32() * SURFACE_WIDTH / GRID_SIZE),
-			math.floor(rand.float32() * SURFACE_HEIGHT / GRID_SIZE),
-		)
-		world_add_entity(
-			&game_state.world,
-			Entity {
-				kind = .enemy,
-				sprite_id = .skeleton,
-				position = position,
-				health = 2,
-			},
-		)
-	}
-
-	// Deck
-	card_ids: []Card_Id = {.dagger, .dagger, .fire_ball}
-	for _ in 0 ..< 100 {
-		card_id := rand.choice(card_ids)
-		card := card_get(card_id)
-		append(&game_state.deck.cards, card)
-	}
-
-	// Hand
-	game_state.hand.cards_max = 8
-	game_state.hand.cards_regen = 1
-	for _ in 0 ..< 4 {
-		hand_draw_from_deck(&game_state.hand, &game_state.deck)
-	}
-
-	return game_state
+Client_Game_State :: struct {
+	world: World,
+	hand:  Hand,
 }
 
-game_state_serialize :: proc(
-	game_state: ^Game_State,
-) -> (
-	data: []byte,
-	err: json.Marshal_Error,
-) {
-
-	serializable := Serializable_Game_State {
-		entities = game_state.world.entities,
-	}
-	return json.marshal(serializable)
+Client_Context :: struct {
+	game_state:    Client_Game_State,
+	physical_hand: Physical_Hand,
+	graphics:      Graphics,
+	socket:        net.TCP_Socket,
 }
 
-game_state_deserialize :: proc(data: []byte) -> Game_State {
-	serializable: Serializable_Game_State
-	json.unmarshal(data, &serializable)
+client_context_create :: proc() -> Client_Context {
+	ctx := Client_Context{}
 
-	game_state := Game_State{}
-	game_state.world.entities = serializable.entities
+	socket, err := net.dial_tcp(
+		net.Endpoint{address = SERVER_ADDR, port = PORT},
+	)
+	assert(err == nil, format(err))
 
-	return game_state
+	ctx.socket = socket
+	net.set_blocking(ctx.socket, false)
+
+	return ctx
 }

@@ -1,6 +1,8 @@
 #+vet unused shadowing using-stmt style semicolon
 package main
 
+import "core:net"
+
 DEV :: true
 DESKTOP :: false
 
@@ -20,5 +22,9 @@ ONE_PIXEL :: (1.0 / f32(GRID_SIZE))
 
 CARD_WIDTH :: 120.0
 CARD_HEIGHT :: 200.0
+CARDS_MAX :: 6
 
 FONT_DEFAULT :: Font_Id.lilita_one_regular
+
+PORT :: 16143
+SERVER_ADDR :: net.IP4_Address{192, 168, 1, 113}

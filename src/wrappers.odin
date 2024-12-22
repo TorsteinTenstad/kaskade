@@ -25,7 +25,7 @@ draw_text :: proc(
 	font: Font_Id = FONT_DEFAULT,
 ) {
 	rl.DrawTextEx(
-		get_game_state().graphics.fonts[font],
+		get_context().graphics.fonts[font],
 		cstr(text),
 		position,
 		size,

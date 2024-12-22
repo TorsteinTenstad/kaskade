@@ -33,7 +33,7 @@ Font_Paths := [Font_Id]string {
 	.nova_square_regular = "NovaSquare-Regular.ttf",
 }
 
-graphics_create :: proc(game_state: ^Game_State) {
+graphics_create :: proc(ctx: ^Client_Context) {
 	when DEV && DESKTOP {
 		window_width :: 1920
 		window_height :: 2070
@@ -45,7 +45,7 @@ graphics_create :: proc(game_state: ^Game_State) {
 		window_height :: 1080
 	}
 
-	rl.InitWindow(window_width, window_height, "Rogue Deck")
+	rl.InitWindow(window_width, window_height, "Kaskade")
 	rl.SetWindowState({.WINDOW_RESIZABLE})
 	rl.SetTargetFPS(60)
 
@@ -53,24 +53,18 @@ graphics_create :: proc(game_state: ^Game_State) {
 		rl.SetWindowPosition(1920, 32)
 	}
 
-	game_state.graphics.sprites = _load_sprites()
-	game_state.graphics.fonts = _load_fonts()
-	rl.GuiSetFont(game_state.graphics.fonts[Font_Id.lilita_one_regular])
+	ctx.graphics.sprites = _load_sprites()
+	ctx.graphics.fonts = _load_fonts()
+	rl.GuiSetFont(ctx.graphics.fonts[Font_Id.lilita_one_regular])
 
-	game_state.graphics.surface = rl.LoadRenderTexture(
-		SURFACE_WIDTH,
-		SURFACE_HEIGHT,
-	)
-	rl.SetTextureFilter(
-		game_state.graphics.surface.texture,
-		rl.TextureFilter.POINT,
-	)
+	ctx.graphics.surface = rl.LoadRenderTexture(SURFACE_WIDTH, SURFACE_HEIGHT)
+	rl.SetTextureFilter(ctx.graphics.surface.texture, rl.TextureFilter.POINT)
 
-	game_state.graphics.camera.view_size = {
+	ctx.graphics.camera.view_size = {
 		SURFACE_WIDTH / GRID_SIZE,
 		SURFACE_HEIGHT / GRID_SIZE,
 	}
-	game_state.graphics.camera.target_position = {4, 4}
+	ctx.graphics.camera.target_position = {4, 4}
 }
 
 @(private = "file")

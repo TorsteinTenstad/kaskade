@@ -5,61 +5,57 @@ import "core:thread"
 import rl "vendor:raylib"
 
 @(private = "file")
-_game_state: Game_State
+_client_context: Client_Context
 is_server: bool = true
 
-get_game_state :: proc() -> ^Game_State {
-	return &_game_state
+get_context :: proc() -> ^Client_Context {
+	return &_client_context
 }
 
 
 main :: proc() {
-	_game_state = game_state_create()
-	graphics_create(&_game_state)
 
+	rl.SetTraceLogLevel(rl.TraceLogLevel.NONE)
 
+	// Server
 	thread.create_and_start(server_start)
 
-	// Main loop
+	// Client
+	_client_context = client_context_create()
+	graphics_create(&_client_context)
+
 	for !rl.WindowShouldClose() {
-
-		if is_server {
-			_server_step(&_game_state)
-		}
-
-		_main_step(&_game_state)
-		_main_draw(&_game_state)
+		_main_step(&_client_context)
+		_main_draw(&_client_context)
 	}
-
 	rl.CloseWindow()
 }
 
 @(private = "file")
-_server_step :: proc(game_state: ^Game_State) {
+_main_step :: proc(ctx: ^Client_Context) {
 
-}
-
-@(private = "file")
-_main_step :: proc(game_state: ^Game_State) {
+	// Network
+	network_step(ctx)
 
 	// Camera
-	camera := &game_state.graphics.camera
-	camera_step(camera, &game_state.world)
+	camera := &ctx.graphics.camera
+	camera_step(camera, &ctx.game_state.world)
 
 	// Hand
-	hand_step(game_state)
+	hand_step_player(ctx)
+	hand_step(ctx)
 }
 
 COLOR_BACKGROUND_DARK: rl.Color : {21, 18, 20, 255}
 COLOR_BACKGROUND_LIGHT: rl.Color : {29, 25, 27, 255}
 
 @(private = "file")
-_main_draw :: proc(game_state: ^Game_State) {
-	camera := &game_state.graphics.camera
+_main_draw :: proc(ctx: ^Client_Context) {
+	camera := &ctx.graphics.camera
 	scale := camera_surface_scale(camera)
 
 	// Draw onto texture
-	rl.BeginTextureMode(game_state.graphics.surface)
+	rl.BeginTextureMode(ctx.graphics.surface)
 
 	{
 		// Background
@@ -77,9 +73,9 @@ _main_draw :: proc(game_state: ^Game_State) {
 		}
 
 		// Card range
-		card_index, is_hovering := game_state.hand.hover_index.(int)
+		card_index, is_hovering := ctx.physical_hand.hover_index.(int)
 		if is_hovering {
-			card := &game_state.hand.cards[card_index]
+			card := &ctx.physical_hand.cards[card_index]
 			world_positions := card_get_positions(&card.card)
 			for world_position in world_positions {
 				surface_position := i32_vec_2(
@@ -96,9 +92,9 @@ _main_draw :: proc(game_state: ^Game_State) {
 		}
 
 		// Entities
-		for entity_id in game_state.world.world_object_ids {
+		for entity_id in ctx.game_state.world.world_object_ids {
 			entity, _ := world_get_entity(
-				&game_state.world,
+				&ctx.game_state.world,
 				entity_id,
 			).(^Entity)
 			entity_draw(entity)
@@ -111,7 +107,7 @@ _main_draw :: proc(game_state: ^Game_State) {
 
 	{
 		rl.ClearBackground(rl.BLACK)
-		texture := game_state.graphics.surface.texture
+		texture := ctx.graphics.surface.texture
 		surface_origin := camera_surface_origin(camera)
 		// Hack to make camera smooth
 		subpixel := FVec2 {
@@ -136,14 +132,14 @@ _main_draw :: proc(game_state: ^Game_State) {
 		draw_text(format(rl.GetFPS()), {16, 16})
 
 		// GUI
-		for entity_id in game_state.world.world_object_ids {
+		for entity_id in ctx.game_state.world.world_object_ids {
 			entity, _ := world_get_entity(
-				&game_state.world,
+				&ctx.game_state.world,
 				entity_id,
 			).(^Entity)
 			entity_draw_gui(entity)
 		}
-		hand_draw_gui(&game_state.hand, camera)
+		hand_draw_gui(&ctx.physical_hand, camera)
 	}
 	rl.EndDrawing()
 }

@@ -6,11 +6,12 @@ import rl "vendor:raylib"
 
 Card_Id :: enum {
 	skeleton,
-	dagger,
 	fire_ball,
+	dagger,
 }
 
 Card :: struct {
+	id:          Card_Id,
 	name:        string,
 	attack:      int,
 	play:        proc(_: ^World, _: IVec2) -> bool,
@@ -19,7 +20,7 @@ Card :: struct {
 	unbreakable: bool,
 }
 
-card_draw_gui :: proc(card: ^PhysicalCard) {
+card_draw_gui :: proc(card: ^Physical_Card) {
 	rect := card_get_rect(card)
 	rl.DrawRectangleRounded(rect, 0.2, 8, rl.WHITE)
 	outline_color := card_get_outline_color(&card.card)
@@ -48,7 +49,7 @@ card_get_outline_color :: proc(card: ^Card) -> rl.Color {
 	return rl.BLACK
 }
 
-card_get_rect :: proc(card: ^PhysicalCard) -> rl.Rectangle {
+card_get_rect :: proc(card: ^Physical_Card) -> rl.Rectangle {
 	width := card.scale * CARD_WIDTH
 	height := card.scale * CARD_HEIGHT
 	return rl.Rectangle {
