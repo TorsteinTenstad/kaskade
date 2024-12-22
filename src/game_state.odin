@@ -13,8 +13,7 @@ Game_State :: struct {
 	current_entity_id: int,
 }
 
-@(private = "file")
-_Serializable_Game_State :: struct {
+Serializable_Game_State :: struct {
 	entities:  [dynamic]Entity,
 	player_id: int,
 }
@@ -64,14 +63,14 @@ game_state_serialize :: proc(
 	err: json.Marshal_Error,
 ) {
 
-	serializable := _Serializable_Game_State {
+	serializable := Serializable_Game_State {
 		entities = game_state.world.entities,
 	}
 	return json.marshal(serializable)
 }
 
 game_state_deserialize :: proc(data: []byte) -> Game_State {
-	serializable: _Serializable_Game_State
+	serializable: Serializable_Game_State
 	json.unmarshal(data, &serializable)
 
 	game_state := Game_State{}

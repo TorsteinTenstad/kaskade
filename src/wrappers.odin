@@ -6,7 +6,7 @@ import "core:strings"
 import rl "vendor:raylib"
 
 print :: proc(args: ..any, sep := " ", flush := true) {
-	fmt.println(args, sep = sep, flush = flush)
+	fmt.println(..args, sep = sep, flush = flush)
 }
 
 cstr :: proc(str: string) -> cstring {

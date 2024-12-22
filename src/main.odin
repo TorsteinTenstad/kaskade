@@ -1,26 +1,42 @@
 #+vet unused shadowing using-stmt style semicolon
 package main
 
+import "core:thread"
 import rl "vendor:raylib"
 
 @(private = "file")
 _game_state: Game_State
+is_server: bool = true
 
 get_game_state :: proc() -> ^Game_State {
 	return &_game_state
 }
 
+
 main :: proc() {
 	_game_state = game_state_create()
 	graphics_create(&_game_state)
 
+
+	thread.create_and_start(server_start)
+
 	// Main loop
 	for !rl.WindowShouldClose() {
+
+		if is_server {
+			_server_step(&_game_state)
+		}
+
 		_main_step(&_game_state)
 		_main_draw(&_game_state)
 	}
 
 	rl.CloseWindow()
+}
+
+@(private = "file")
+_server_step :: proc(game_state: ^Game_State) {
+
 }
 
 @(private = "file")
