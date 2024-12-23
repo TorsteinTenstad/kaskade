@@ -26,9 +26,9 @@ Player :: struct {
 }
 
 Client_Game_State :: struct {
-	world:         World,
-	hand:          Hand,
-	player_active: bool,
+	world:            World,
+	hand:             Hand,
+	is_active_player: bool,
 }
 
 Server_To_Client :: struct {
@@ -61,7 +61,10 @@ listen_tcp :: proc(
 
 		sockets[init_msg.player_id] = client_socket
 
-		if !is_event do continue
+		if !is_event {
+			game_state_send(ctx, init_msg.player_id)
+			continue
+		}
 
 		if len(sockets) == 2 {
 			game_start(ctx)
@@ -89,7 +92,7 @@ game_start :: proc(ctx: ^Server_Context) {
 	for player_id, _ in ctx.sockets_event {
 		player := Player {
 			id   = player_id,
-			deck = random_deck(),
+			deck = deck_random(),
 		}
 		for _ in 0 ..< CARDS_MAX {
 			hand_draw_from_deck(&player.hand, &player.deck)
@@ -107,6 +110,10 @@ game_start :: proc(ctx: ^Server_Context) {
 	}
 
 	ctx.game_state = game_state
+
+	for player_id in ctx.sockets_state {
+		game_state_send(ctx, player_id)
+	}
 }
 
 listen_event :: proc(raw_ptr: rawptr) {
@@ -153,56 +160,65 @@ game_loop :: proc(raw_ptr: rawptr) {
 	ctx := (^Server_Context)(raw_ptr)
 
 	for true {
-
-		game_state, ok := &ctx.game_state.(Server_Game_State)
-
-		if !ok do continue
 		if len(ctx.message_queue.queue) == 0 do continue
 
 		msg := pop(&ctx.message_queue.queue)
-
 		game_update_from_message(ctx, msg)
 
-		for player_id, socket in ctx.sockets_state {
-			player_active := false
-			hand: Hand
-			if player_id == game_state.white.id {
-				hand = game_state.white.hand
-				player_active = game_state.is_white_to_play
-			}
-			if player_id == game_state.black.id {
-				hand = game_state.black.hand
-				player_active = !game_state.is_white_to_play
-			}
-
-			send_package(
-				socket,
-				Server_To_Client {
-					client_game_state = Client_Game_State {
-						world = game_state.world,
-						hand = hand,
-						player_active = player_active,
-					},
-				},
-			)
+		for player_id in ctx.sockets_state {
+			game_state_send(ctx, player_id)
 		}
 	}
 }
 
+game_state_send :: proc(ctx: ^Server_Context, player_id: Player_Id) {
+	game_state, ok := &ctx.game_state.(Server_Game_State)
+
+	if !ok do return
+
+	player_active := false
+	hand: Hand
+	if player_id == game_state.white.id {
+		hand = game_state.white.hand
+		player_active = game_state.is_white_to_play
+	}
+	if player_id == game_state.black.id {
+		hand = game_state.black.hand
+		player_active = !game_state.is_white_to_play
+	}
+
+	send_package(
+		ctx.sockets_state[player_id],
+		Server_To_Client {
+			client_game_state = Client_Game_State {
+				world = game_state.world,
+				hand = hand,
+				is_active_player = player_active,
+			},
+		},
+	)
+}
+
 game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 
-	game_state, ok := ctx.game_state.(Server_Game_State)
+	game_state, ok := &ctx.game_state.(Server_Game_State)
 	if !ok do return
 
 	player: ^Player
-	if msg.player_id == game_state.white.id {
+
+	if msg.player_id == game_state.white.id && game_state.is_white_to_play {
 		player = &game_state.white
 	}
-	if msg.player_id == game_state.black.id {
+	if msg.player_id == game_state.black.id && !game_state.is_white_to_play {
 		player = &game_state.black
 	}
 	if player == nil {
-		log_red("Player not found", msg.player_id)
+		if msg.player_id == game_state.white.id ||
+		   msg.player_id == game_state.black.id {
+			log_red("Not your turn", msg.player_id)
+		} else {
+			log_red("Player not found", msg.player_id)
+		}
 		return
 	}
 
@@ -225,6 +241,11 @@ game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 
 		// Activate next player
 		game_state.is_white_to_play = !game_state.is_white_to_play
+		if game_state.is_white_to_play {
+			log_magenta("White to play")
+		} else {
+			log_magenta("Black to play")
+		}
 	}
 
 	_, is_deck := msg.deck.(Deck)
@@ -236,9 +257,10 @@ game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 	if is_card_action {
 		card_id := player.hand.cards[card_action.card_idx]
 		card := card_get(card_id)
-		card.play(&game_state.world, card_action.target)
-
-		ordered_remove(&player.hand.cards, card_action.card_idx)
+		log_magenta("Play", card_id)
+		if card.play(&game_state.world, card_action.target) {
+			ordered_remove(&player.hand.cards, card_action.card_idx)
+		}
 	}
 }
 
@@ -252,6 +274,10 @@ handle_client :: proc(params: ^Handle_Client_Params) {
 	for true {
 		msg: Client_To_Server
 		if !recv_package(params.socket, &msg) do continue
+		if msg.player_id == 0 {
+			log_red("Client_To_Server missing player_id")
+		}
+
 		append(&params.message_queue.queue, msg) // TODO: not thread safe!
 	}
 	net.close(params.socket)

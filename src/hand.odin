@@ -205,7 +205,7 @@ deck_shuffle :: proc(deck: ^Deck) {
 	rand.shuffle(deck.cards[:])
 }
 
-random_deck :: proc() -> Deck {
+deck_random :: proc() -> Deck {
 	deck: Deck
 
 	for _ in 0 ..< 10 {

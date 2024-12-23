@@ -6,16 +6,22 @@ import "core:net"
 import "core:slice"
 import "core:sync"
 
+Headless_Client_Context :: struct {
+	player_id:    Player_Id,
+	socket_event: net.TCP_Socket,
+	socket_state: net.TCP_Socket,
+}
+
 Client_Context :: struct {
+	physical_hand:             Physical_Hand,
+	graphics:                  Graphics,
+	active_entity_id:          int,
 	player_id:                 Player_Id,
 	game_state:                Client_Game_State,
 	game_state_incoming:       Maybe(Client_Game_State),
 	game_state_incoming_mutex: sync.Recursive_Mutex,
-	physical_hand:             Physical_Hand,
-	graphics:                  Graphics,
 	socket_event:              net.TCP_Socket,
 	socket_state:              net.TCP_Socket,
-	active_entity_id:          int,
 }
 
 Client_To_Server :: struct {
@@ -35,6 +41,18 @@ End_Turn :: struct {}
 client_context_create :: proc() -> Client_Context {
 	ctx := Client_Context{}
 
+	headless_ctx := headless_client_context_create()
+
+	ctx.player_id = headless_ctx.player_id
+	ctx.socket_event = headless_ctx.socket_event
+	ctx.socket_state = headless_ctx.socket_state
+
+	return ctx
+}
+
+headless_client_context_create :: proc() -> Headless_Client_Context {
+	ctx := Headless_Client_Context{}
+
 	ctx.player_id = Player_Id(rand.uint64())
 
 	socket_event, socket_event_err := net.dial_tcp(
@@ -50,12 +68,6 @@ client_context_create :: proc() -> Client_Context {
 	assert(socket_state_err == nil, format(socket_state_err))
 	send_package(socket_state, Client_To_Server{player_id = ctx.player_id})
 	ctx.socket_state = socket_state
-
-	init_msg := Client_To_Server {
-		player_id = ctx.player_id,
-		deck      = random_deck(),
-	}
-	send_package(socket_event, init_msg)
 
 	return ctx
 }
@@ -113,4 +125,25 @@ game_state_apply_incoming :: proc(ctx: ^Client_Context) {
 
 		// TODO: Fix animations
 	}
+}
+
+client_start :: proc() {
+	player_id := (Player_Id)(rand.uint64())
+
+	event_endpoint := net.Endpoint {
+		address = SERVER_ADDR,
+		port    = SERVER_PORT_EVENT,
+	}
+	socket_event, socket_event_err := net.dial_tcp(event_endpoint)
+	assert(socket_event_err == nil, format(socket_event_err))
+	send_package(socket_event, Client_To_Server{player_id = player_id})
+
+	state_endpoint := net.Endpoint {
+		address = SERVER_ADDR,
+		port    = SERVER_PORT_STATE,
+	}
+
+	socket_state, socket_state_err := net.dial_tcp(state_endpoint)
+	assert(socket_state_err == nil, format(socket_state_err))
+	send_package(socket_state, Client_To_Server{player_id = player_id})
 }

@@ -5,7 +5,6 @@ import "core:encoding/json"
 import "core:mem"
 import "core:net"
 
-
 send_package :: proc(socket: net.TCP_Socket, msg: $T) -> bool {
 	buf, json_err := json.marshal(msg)
 	if json_err != nil {

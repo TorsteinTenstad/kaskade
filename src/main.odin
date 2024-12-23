@@ -1,10 +1,7 @@
 #+vet unused shadowing using-stmt style semicolon
 package main
 
-import "core:math/rand"
-import "core:net"
 import "core:thread"
-import "core:time"
 import rl "vendor:raylib"
 
 @(private = "file")
@@ -15,40 +12,6 @@ get_context :: proc() -> ^Client_Context {
 	return &_client_context
 }
 
-run_ai :: proc() {
-	player_id := (Player_Id)(rand.uint64())
-	event_endpoint := net.Endpoint {
-		address = SERVER_ADDR,
-		port    = SERVER_PORT_EVENT,
-	}
-	socket_event, socket_event_err := net.dial_tcp(event_endpoint)
-	send_package(socket_event, Client_To_Server{player_id = player_id})
-	assert(socket_event_err == nil, format(socket_event_err))
-	state_endpoint := net.Endpoint {
-		address = SERVER_ADDR,
-		port    = SERVER_PORT_STATE,
-	}
-	socket_state, socket_state_err := net.dial_tcp(state_endpoint)
-	send_package(socket_event, Client_To_Server{player_id = player_id})
-	assert(socket_state_err == nil, format(socket_state_err))
-
-	time.sleep(time.Second)
-
-	send_package(
-		socket_event,
-		Client_To_Server{player_id = player_id, deck = random_deck()},
-	)
-
-	server_to_client: Server_To_Client
-	for true {
-		recv_ok := recv_package(socket_state, &server_to_client)
-		if !recv_ok {
-			log_red("AI failed to receive state from server")
-			continue}
-		log_magenta("AI received state from server")
-	}
-}
-
 main :: proc() {
 
 	rl.SetTraceLogLevel(rl.TraceLogLevel.NONE)
@@ -56,7 +19,7 @@ main :: proc() {
 	ctx: Server_Context
 	server_start(&ctx)
 
-	thread.create_and_start(run_ai)
+	thread.create_and_start(ai_run)
 
 	// Client
 	_client_context = client_context_create()
@@ -96,7 +59,10 @@ _main_step :: proc(ctx: ^Client_Context) {
 
 	// Input
 	if rl.IsKeyPressed(.ENTER) {
-		send_package(ctx.socket_event, Client_To_Server{end_turn = End_Turn{}})
+		send_package(
+			ctx.socket_event,
+			Client_To_Server{player_id = ctx.player_id, end_turn = End_Turn{}},
+		)
 	}
 }
 
@@ -180,6 +146,10 @@ _main_draw :: proc(ctx: ^Client_Context) {
 		)
 
 		draw_text(format(rl.GetFPS()), {16, 16})
+		draw_text(
+			format("Your turn:", ctx.game_state.is_active_player),
+			{16, 48},
+		)
 
 		hand_draw_gui(&ctx.physical_hand, camera)
 	}
