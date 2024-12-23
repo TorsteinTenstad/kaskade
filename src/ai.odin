@@ -2,6 +2,7 @@
 package main
 
 import "core:math/rand"
+import "core:time"
 
 ai_run :: proc() {
 	is_active_player := false
@@ -32,6 +33,9 @@ ai_do_action :: proc(
 	game_state: ^Client_Game_State,
 ) {
 	if len(game_state.hand.cards) > 0 {
+
+		time.sleep(time.Second)
+
 		card_idx := rand.int_max(len(game_state.hand.cards))
 		target := IVec2{rand.int_max(8), rand.int_max(8)}
 
@@ -46,6 +50,8 @@ ai_do_action :: proc(
 			},
 		)
 	}
+
+	time.sleep(time.Second)
 
 	send_package(
 		ctx.socket_event,
