@@ -80,8 +80,8 @@ _main_draw :: proc(ctx: ^Client_Context) {
 	{
 		// Background
 		rl.ClearBackground(COLOR_BACKGROUND_DARK)
-		for x in 0 ..< 8 {
-			for y in 0 ..< 8 {
+		for x in 0 ..< BOARD_WIDTH {
+			for y in 0 ..< BOARD_HEIGHT {
 				dark, light := COLOR_BACKGROUND_DARK, COLOR_BACKGROUND_LIGHT
 				is_light := ((x % 2) + (y % 2)) != 1
 				rl.DrawRectangleV(

@@ -119,7 +119,12 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			) -> bool {
 				world_add_entity(
 					world,
-					Entity{kind = .bishop, color = color, position = position},
+					Entity {
+						kind = .bishop,
+						color = color,
+						capturing = true,
+						position = position,
+					},
 				)
 				return true
 			},
@@ -135,7 +140,12 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			) -> bool {
 				world_add_entity(
 					world,
-					Entity{kind = .rook, color = color, position = position},
+					Entity {
+						kind = .rook,
+						color = color,
+						capturing = true,
+						position = position,
+					},
 				)
 				return true
 			},
