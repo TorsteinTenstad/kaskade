@@ -91,12 +91,8 @@ _main_draw :: proc(ctx: ^Client_Context) {
 		}
 
 		// Entities
-		for entity_id in ctx.game_state.world.world_object_ids {
-			entity, _ := world_get_entity(
-				&ctx.game_state.world,
-				entity_id,
-			).(^Entity)
-			entity_draw(entity)
+		for &entity in ctx.game_state.world.entities {
+			entity_draw(&entity)
 		}
 	}
 	rl.EndTextureMode()
@@ -131,12 +127,8 @@ _main_draw :: proc(ctx: ^Client_Context) {
 		draw_text(format(rl.GetFPS()), {16, 16})
 
 		// GUI
-		for entity_id in ctx.game_state.world.world_object_ids {
-			entity, _ := world_get_entity(
-				&ctx.game_state.world,
-				entity_id,
-			).(^Entity)
-			entity_draw_gui(entity)
+		for &entity in ctx.game_state.world.entities {
+			entity_draw_gui(&entity)
 		}
 		hand_draw_gui(&ctx.physical_hand, camera)
 	}

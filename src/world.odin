@@ -3,12 +3,12 @@ package main
 
 World :: struct {
 	entities:             [dynamic]Entity,
-	world_object_ids:     [dynamic]int,
 	next_world_object_id: int,
 }
 
 world_add_entity :: proc(world: ^World, entity: Entity) -> int {
 	entity := entity
+	entity.draw_position = f_vec_2(entity.position)
 	entity.id = world.next_world_object_id
 	world.next_world_object_id += 1
 	append(&world.entities, entity)
@@ -28,10 +28,9 @@ _world_get_entity_from_position :: proc(
 	world: ^World,
 	world_position: IVec2,
 ) -> Maybe(^Entity) {
-	for entity_id in world.world_object_ids {
-		entity, _ := world_get_entity(world, entity_id).(^Entity)
+	for &entity in world.entities {
 		if entity.position == world_position {
-			return entity
+			return &entity
 		}
 	}
 	return nil
