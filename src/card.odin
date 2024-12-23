@@ -25,6 +25,7 @@ Card :: struct {
 	name:        string,
 	description: string,
 	kind:        Card_Kind,
+	cost:        int,
 	play:        proc(_: ^World, _: Piece_Color, _: IVec2) -> bool,
 }
 
@@ -82,6 +83,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			name = "Pawn",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
+			cost = 1,
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
@@ -99,6 +101,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			name = "Knight",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
+			cost = 2,
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
@@ -116,6 +119,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			name = "Bishop",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
+			cost = 3,
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
@@ -138,6 +142,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			name = "Rook",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
+			cost = 3,
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
@@ -160,6 +165,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			name = "Queen",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
+			cost = 4,
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
@@ -177,6 +183,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			name = "King",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
+			cost = 4,
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
@@ -194,6 +201,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			name = "Obduction",
 			kind = Card_Kind.spell,
 			description = "Remove all pieces in a 3x3 square.",
+			cost = 4,
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
@@ -219,6 +227,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			name = "Haste",
 			kind = Card_Kind.spell,
 			description = "Trigger a piece",
+			cost = 2,
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
