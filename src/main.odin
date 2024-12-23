@@ -156,7 +156,7 @@ _main_draw :: proc(ctx: ^Client_Context) {
 		draw_text(format(ctx.game_state.active_color, "to play"), {16, 64})
 		// Cards are drawn on y=96
 		draw_text(
-			format("Mana:", ctx.game_state.mana, "/", ctx.game_state.max_mana),
+			format("Mana:", ctx.game_state.mana, "/", ctx.game_state.mana_max),
 			{16, 128},
 		)
 

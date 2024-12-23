@@ -6,11 +6,11 @@ import "core:thread"
 Player_Id :: distinct u64 //uuid
 
 Server_Game_State :: struct {
-	world:              World,
-	active_color:       Piece_Color,
-	white:              Player,
-	black:              Player,
-	start_of_turn_mana: int,
+	world:        World,
+	active_color: Piece_Color,
+	white:        Player,
+	black:        Player,
+	mana:         int,
 }
 
 Server_Context :: struct {
@@ -34,7 +34,7 @@ Client_Game_State :: struct {
 	player_color: Piece_Color,
 	active_color: Piece_Color,
 	mana:         int,
-	max_mana:     int,
+	mana_max:     int,
 }
 
 Server_To_Client :: struct {
@@ -90,10 +90,9 @@ listen_tcp :: proc(
 }
 
 game_start :: proc(ctx: ^Server_Context) {
-
 	game_state := Server_Game_State {
-		active_color       = Piece_Color.white,
-		start_of_turn_mana = 1,
+		active_color = Piece_Color.white,
+		mana         = 1,
 	}
 	log_magenta("Starting game with players", ctx.sockets_event)
 	for player_id, _ in ctx.sockets_event {
@@ -108,6 +107,7 @@ game_start :: proc(ctx: ^Server_Context) {
 			log_magenta("White player is", player_id)
 			player.color = Piece_Color.white
 			game_state.white = player
+			game_state.white.mana = game_state.mana
 			continue
 		}
 		if game_state.black.id == 0 {
@@ -202,7 +202,7 @@ game_state_send :: proc(ctx: ^Server_Context, player_id: Player_Id) {
 		client_game_state.hand = player.hand
 		client_game_state.player_color = player.color
 		client_game_state.mana = player.mana
-		client_game_state.max_mana = game_state.start_of_turn_mana
+		client_game_state.mana_max = game_state.mana
 	}
 
 	send_package(
@@ -257,19 +257,16 @@ game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 
 		// Update max mana
 		if game_state.active_color == Piece_Color.white {
-			game_state.start_of_turn_mana = min(
-				MAX_MANA,
-				game_state.start_of_turn_mana + 1,
-			)
+			game_state.mana = min(MANA_MAX, game_state.mana + 1)
 		}
 
 		// Activate next player and refill their mana
 		if game_state.active_color == Piece_Color.black {
 			game_state.active_color = Piece_Color.white
-			game_state.white.mana = game_state.start_of_turn_mana
+			game_state.white.mana = game_state.mana
 		} else {
 			game_state.active_color = Piece_Color.black
-			game_state.black.mana = game_state.start_of_turn_mana
+			game_state.black.mana = game_state.mana
 		}
 
 		log_magenta(game_state.active_color, "to play")
