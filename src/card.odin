@@ -5,19 +5,21 @@ import "core:math/linalg"
 import rl "vendor:raylib"
 
 Card_Id :: enum {
-	skeleton,
-	fire_ball,
-	dagger,
+	pawn,
+	haste,
+	obduction,
 }
 
+Card_Type :: enum {
+	piece,
+	spell,
+}
 Card :: struct {
 	id:          Card_Id,
 	name:        string,
-	attack:      int,
-	play:        proc(_: ^World, _: IVec2) -> bool,
-	range:       f32,
 	description: string,
-	unbreakable: bool,
+	type:        Card_Type,
+	play:        proc(_: ^World, _: IVec2) -> bool,
 }
 
 card_draw_gui :: proc(card: ^Physical_Card) {
@@ -45,7 +47,14 @@ card_draw_gui :: proc(card: ^Physical_Card) {
 }
 
 card_get_outline_color :: proc(card: ^Card) -> rl.Color {
-	if card.unbreakable do return rl.BLUE
+	switch card.type {
+	case .piece:
+		return rl.BLACK
+	case .spell:
+		return rl.BLUE
+
+	}
+	assert(false, "non-exhaustive")
 	return rl.BLACK
 }
 
@@ -62,62 +71,50 @@ card_get_rect :: proc(card: ^Physical_Card) -> rl.Rectangle {
 
 card_get :: proc(card_id: Card_Id) -> Card {
 	switch card_id {
-	case .skeleton:
+	case .pawn:
 		return Card {
-			name = "Skeleton",
-			description = "Spawn a skelly",
+			name = "Pawn",
+			description = "TODO: description",
 			play = proc(world: ^World, position: IVec2) -> bool {
 				world_add_entity(
 					world,
 					Entity {
-						kind = .enemy,
+						action_id = .pawn,
 						sprite_id = .skeleton,
 						position = position,
 					},
 				)
 				return true
 			},
-			range = 4.2,
 		}
-	case .dagger:
+	case .obduction:
 		return Card {
-			name = "Dagger",
-			description = "Deal 2 dmg",
+			name = "Obduction",
+			description = "Remove all pieces in a 3x3 square.",
 			play = proc(world: ^World, position: IVec2) -> bool {
-				entity, hit := world_get_entity(world, position).(^Entity)
-				if hit {
-					entity.health -= 2
-					if entity.health <= 0 {
-						world_remove_entity(world, entity)
+				for &entity in world.entities {
+					distance_vec := position - entity.position
+					if (abs(distance_vec.x) <= 1 && abs(distance_vec.y) <= 1) {
+						world_remove_entity(world, &entity)
 					}
 				}
-				return hit
+				return true
 			},
-			range = 1.2,
 		}
-	case .fire_ball:
+	case .haste:
 		return Card {
-			name = "Fire Ball",
-			description = "Deal 6 dmg",
+			name = "Haste",
+			description = "Trigger a piece",
 			play = proc(world: ^World, position: IVec2) -> bool {
-				entity, hit := world_get_entity(world, position).(^Entity)
-				if hit {
-					entity.health -= 6
-					if entity.health <= 0 {
-						world_remove_entity(world, entity)
-					}
-				}
-				return hit
+				entity, found := world_get_entity(world, position).(^Entity)
+				found or_return
+				entity_run_action(world, entity)
+				return true
 			},
-			range = 2.2,
 		}
 	}
-	return Card {
-		name = "Empty",
-		play = proc(world: ^World, position: IVec2) -> bool {
-			return true
-		},
-	}
+	assert(false, "non-exhaustive")
+	return Card{}
 }
 
 card_get_positions :: proc(card: ^Card) -> []IVec2 {

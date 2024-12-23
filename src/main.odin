@@ -130,10 +130,6 @@ _main_draw :: proc(ctx: ^Client_Context) {
 
 		draw_text(format(rl.GetFPS()), {16, 16})
 
-		// GUI
-		for &entity in ctx.game_state.world.entities {
-			entity_draw_gui(&entity)
-		}
 		hand_draw_gui(&ctx.physical_hand, camera)
 	}
 	rl.EndDrawing()

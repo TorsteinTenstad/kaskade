@@ -9,7 +9,7 @@ import "core:net"
 send_package :: proc(socket: net.TCP_Socket, msg: $T) -> bool {
 	buf, json_err := json.marshal(msg)
 	if json_err != nil {
-		log_red(json_err)
+		log_red(json_err, ":", msg)
 		return false
 	}
 

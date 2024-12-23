@@ -3,19 +3,23 @@ package main
 
 import rl "vendor:raylib"
 
-Entity_Kind :: enum {
-	player,
-	enemy,
+Action_Id :: enum {
+	pawn,
+}
+
+entity_run_action :: proc(world: ^World, entity: ^Entity) {
+	switch entity.action_id {
+	case .pawn:
+		entity.draw_position.y -= 1
+	}
 }
 
 Entity :: struct {
-	kind:          Entity_Kind,
 	id:            int,
+	action_id:     Action_Id,
 	position:      IVec2,
 	draw_position: FVec2,
 	sprite_id:     Sprite_Id,
-	health:        int,
-	done:          bool,
 }
 
 entity_step :: proc(entity: ^Entity) {
@@ -38,14 +42,4 @@ entity_draw :: proc(entity: ^Entity) {
 	)
 	rl.DrawTextureEx(texture, surface_position - {1, 0}, 0, 1.0, rl.BLACK)
 	rl.DrawTextureEx(texture, surface_position, 0, 1.0, rl.WHITE)
-}
-
-entity_draw_gui :: proc(entity: ^Entity) {
-	graphics := &get_context().graphics
-	gui_position := camera_world_to_gui(
-		&graphics.camera,
-		entity.draw_position + {0, -0.2},
-	)
-
-	draw_text(format("HP: ", entity.health), gui_position)
 }

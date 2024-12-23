@@ -209,19 +209,19 @@ deck_shuffle :: proc(deck: ^Deck) {
 
 random_deck :: proc() -> Deck {
 	deck: Deck
-	append(&deck.cards, Card_Id.dagger)
-	append(&deck.cards, Card_Id.dagger)
-	append(&deck.cards, Card_Id.skeleton)
-	append(&deck.cards, Card_Id.dagger)
-	append(&deck.cards, Card_Id.skeleton)
-	append(&deck.cards, Card_Id.fire_ball)
-	append(&deck.cards, Card_Id.dagger)
-	append(&deck.cards, Card_Id.skeleton)
-	append(&deck.cards, Card_Id.dagger)
-	append(&deck.cards, Card_Id.fire_ball)
-	append(&deck.cards, Card_Id.fire_ball)
-	append(&deck.cards, Card_Id.skeleton)
-	append(&deck.cards, Card_Id.fire_ball)
-	append(&deck.cards, Card_Id.skeleton)
+	append(&deck.cards, Card_Id.haste)
+	append(&deck.cards, Card_Id.haste)
+	append(&deck.cards, Card_Id.pawn)
+	append(&deck.cards, Card_Id.haste)
+	append(&deck.cards, Card_Id.pawn)
+	append(&deck.cards, Card_Id.obduction)
+	append(&deck.cards, Card_Id.haste)
+	append(&deck.cards, Card_Id.pawn)
+	append(&deck.cards, Card_Id.haste)
+	append(&deck.cards, Card_Id.obduction)
+	append(&deck.cards, Card_Id.obduction)
+	append(&deck.cards, Card_Id.pawn)
+	append(&deck.cards, Card_Id.obduction)
+	append(&deck.cards, Card_Id.pawn)
 	return deck
 }
