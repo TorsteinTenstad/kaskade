@@ -257,7 +257,7 @@ game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 
 		// Update max mana
 		if game_state.active_color == Piece_Color.white {
-			game_state.start_of_turn_mana = max(
+			game_state.start_of_turn_mana = min(
 				MAX_MANA,
 				game_state.start_of_turn_mana + 1,
 			)
@@ -284,9 +284,12 @@ game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 	if is_card_action {
 		card_id := player.hand.cards[card_action.card_idx]
 		card := card_get(card_id)
-		if card.play(&game_state.world, player.color, card_action.target) {
-			log_magenta(game_state.active_color, "played", card_id)
-			ordered_remove(&player.hand.cards, card_action.card_idx)
+		if card.cost <= player.mana {
+			if card.play(&game_state.world, player.color, card_action.target) {
+				log_magenta(game_state.active_color, "played", card_id)
+				player.mana -= card.cost
+				ordered_remove(&player.hand.cards, card_action.card_idx)
+			}
 		}
 	}
 }
