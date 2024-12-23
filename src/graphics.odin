@@ -27,12 +27,12 @@ Sprite_Id :: enum {
 Sprite_Paths := [Sprite_Id]string {
 	.player   = "player.png",
 	.skeleton = "skeleton.png",
-	.pawn     = "pawn.png",
-	.knight   = "knight.png",
-	.bishop   = "bishop.png",
-	.rook     = "rook.png",
-	.queen    = "queen.png",
-	.king     = "king.png",
+	.pawn     = "black_pawn.png",
+	.knight   = "black_knight.png",
+	.bishop   = "black_bishop.png",
+	.rook     = "black_rook.png",
+	.queen    = "black_queen.png",
+	.king     = "black_king.png",
 }
 
 Font_Id :: enum {
@@ -86,7 +86,11 @@ _load_sprites :: proc() -> map[Sprite_Id]rl.Texture {
 	for sprite_id in Sprite_Id {
 		sprite_path := Sprite_Paths[sprite_id]
 		full_path := strings.concatenate({ASSETS_PATH, sprite_path})
-		m[sprite_id] = rl.LoadTexture(cstr(full_path))
+		texture := rl.LoadTexture(cstr(full_path))
+		if texture.id == 0 {
+			log_red("Could not find sprite", sprite_path)
+		}
+		m[sprite_id] = texture
 	}
 	return m
 }
