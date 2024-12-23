@@ -47,29 +47,54 @@ entity_try_move_to :: proc(
 	}
 }
 
+entity_positive_y :: proc(color: Piece_Color) -> int {
+	switch color {
+	case .black:
+		return 1
+	case .white:
+		return -1
+	}
+}
+
 entity_run_action :: proc(world: ^World, entity: ^Entity) {
+	entity_positive_y := entity_positive_y(entity.color)
 	switch entity.kind {
 	case .pawn:
-		entity_try_move_to(world, entity, entity.position + IVec2{0, -1})
+		entity_try_move_to(
+			world,
+			entity,
+			entity.position + IVec2{0, entity_positive_y},
+		)
 	case .knight:
-		entity_try_move_to(world, entity, entity.position + IVec2{0, -1})
-		for !world_is_empty(world, entity.position + IVec2{0, -1}) {
+		entity_try_move_to(
+			world,
+			entity,
+			entity.position + IVec2{0, entity_positive_y},
+		)
+		for !world_is_empty(
+			    world,
+			    entity.position + IVec2{0, entity_positive_y},
+		    ) {
 			if entity_try_move_to(
 				world,
 				entity,
-				entity.position + IVec2{1, -1},
+				entity.position + IVec2{1, entity_positive_y},
 			) {continue}
 
 			if entity_try_move_to(
 				world,
 				entity,
-				entity.position + IVec2{-1, -1},
+				entity.position + IVec2{-1, entity_positive_y},
 			) {continue}
 
 			break
 		}
 	case .bishop:
-		entity_try_move_to(world, entity, entity.position + IVec2{0, -1})
+		entity_try_move_to(
+			world,
+			entity,
+			entity.position + IVec2{0, entity_positive_y},
+		)
 	case .rook:
 		for x in (entity.position.x + 1) ..< BOARD_WIDTH {
 			if !world_is_empty(world, IVec2{x, entity.position.y}) {
@@ -97,7 +122,11 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 		}
 	case .queen:
 	case .king:
-		entity_try_move_to(world, entity, entity.position + IVec2{0, -1})
+		entity_try_move_to(
+			world,
+			entity,
+			entity.position + IVec2{0, entity_positive_y},
+		)
 	}
 }
 
