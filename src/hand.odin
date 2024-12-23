@@ -208,7 +208,7 @@ deck_shuffle :: proc(deck: ^Deck) {
 random_deck :: proc() -> Deck {
 	deck: Deck
 
-	for _ in 0 ..< 5 {
+	for _ in 0 ..< 10 {
 		for card_id in Card_Id {
 			if rand.int_max(2) > 0 {
 				append(&deck.cards, card_id)
