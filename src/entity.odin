@@ -21,6 +21,7 @@ entity_try_move_to :: proc(
 	if occupied {
 		if entity.capturing {
 			world_remove_entity(world, other_entity)
+			log_magenta(entity.id, "captured", other_entity.id)
 			entity.position = new_pos
 			return true
 		} else {
@@ -56,6 +57,30 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 	case .bishop:
 		entity_try_move_to(world, entity, entity.position + IVec2{0, -1})
 	case .rook:
+		for x in (entity.position.x + 1) ..< BOARD_WIDTH {
+			if !world_is_empty(world, IVec2{x, entity.position.y}) {
+				if entity_try_move_to(
+					world,
+					entity,
+					IVec2{x, entity.position.y},
+				) {
+					return
+				}
+
+			}
+		}
+		for x in 0 ..< entity.position.x {
+			x_reverse := entity.position.x - 1 - x
+			if !world_is_empty(world, IVec2{x_reverse, entity.position.y}) {
+				if (entity_try_move_to(
+						   world,
+						   entity,
+						   IVec2{x_reverse, entity.position.y},
+					   )) {
+					return
+				}
+			}
+		}
 	case .queen:
 	case .king:
 		entity_try_move_to(world, entity, entity.position + IVec2{0, -1})

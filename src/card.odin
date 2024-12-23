@@ -118,6 +118,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 					Entity {
 						action_id = .bishop,
 						sprite_id = .bishop,
+						capturing = true,
 						position = position,
 					},
 				)
@@ -134,6 +135,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 					Entity {
 						action_id = .rook,
 						sprite_id = .rook,
+						capturing = true,
 						position = position,
 					},
 				)
