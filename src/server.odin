@@ -169,7 +169,6 @@ game_update_from_message :: proc(
 		card_id := player.hand.cards[card_action.card_idx]
 		card := card_get(card_id)
 		card.play(&ctx.world, card_action.target)
-		print("PLAY:", card_id)
 
 		ordered_remove(&player.hand.cards, card_action.card_idx)
 	}

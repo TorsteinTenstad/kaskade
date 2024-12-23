@@ -67,7 +67,6 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			name = "Skeleton",
 			description = "Spawn a skelly",
 			play = proc(world: ^World, position: IVec2) -> bool {
-				print("\n PLEASE \n")
 				world_add_entity(
 					world,
 					Entity {

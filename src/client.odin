@@ -67,7 +67,6 @@ recv_state_from_server :: proc(ctx_raw_ptr: rawptr) {
 
 		if !slice.equal(cards_prev, client_game_state.hand.cards[:]) {
 			clear(&ctx.physical_hand.cards)
-			print(client_game_state.hand.cards)
 
 			for card_id in client_game_state.hand.cards {
 				append(
