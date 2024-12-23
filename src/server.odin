@@ -1,21 +1,26 @@
 #+vet unused shadowing using-stmt style semicolon
 package main
 import "core:net"
-import "core:slice"
 import "core:thread"
 
 Player_Id :: distinct u32
 
+Server_Game_State :: struct {
+	world:            World,
+	is_white_to_play: bool,
+	white:            Player,
+	black:            Player,
+}
+
 Server_Context :: struct {
-	world:         World,
-	players:       map[Player_Id]Player,
-	player_active: Player_Id,
+	game_state:    Maybe(Server_Game_State),
 	sockets_event: map[Player_Id]net.TCP_Socket,
 	sockets_state: map[Player_Id]net.TCP_Socket,
 	message_queue: Message_Queue(Client_To_Server),
 }
 
 Player :: struct {
+	id:   Player_Id,
 	hand: Hand,
 	deck: Deck,
 }
@@ -58,18 +63,8 @@ listen_tcp :: proc(
 
 		if !is_event do continue
 
-		if len(ctx.players) == 0 {
-			ctx.player_active = player_id
-		}
-
-		if player_id not_in ctx.players {
-			player := Player {
-				deck = random_deck(),
-			}
-			for _ in 0 ..< CARDS_MAX {
-				hand_draw_from_deck(&player.hand, &player.deck)
-			}
-			ctx.players[player_id] = player
+		if len(sockets) == 2 {
+			game_start(ctx)
 		}
 
 		params := new(Handle_Client_Params)
@@ -83,6 +78,33 @@ listen_tcp :: proc(
 			free(params_ptr)
 		})
 	}
+}
+
+game_start :: proc(ctx: ^Server_Context) {
+
+	game_state := Server_Game_State {
+		is_white_to_play = true,
+	}
+
+	for player_id in ctx.sockets_event {
+		player := Player {
+			id   = player_id,
+			deck = random_deck(),
+		}
+		for _ in 0 ..< CARDS_MAX {
+			hand_draw_from_deck(&player.hand, &player.deck)
+		}
+		if game_state.white.id == 0 {
+			game_state.white = player
+			break
+		}
+		if game_state.black.id == 0 {
+			game_state.black = player
+			break
+		}
+	}
+
+	ctx.game_state = game_state
 }
 
 listen_event :: proc(raw_ptr: rawptr) {
@@ -129,26 +151,35 @@ game_loop :: proc(raw_ptr: rawptr) {
 	ctx := (^Server_Context)(raw_ptr)
 
 	for true {
+
+		game_state, ok := &ctx.game_state.(Server_Game_State)
+
+		if !ok do continue
 		if len(ctx.message_queue.queue) == 0 do continue
 
 		msg := pop(&ctx.message_queue.queue)
 
-		if msg.id != ctx.player_active {
-			log_red("You", msg.id, "are not active", ctx.player_active)
-			continue
-		}
-
 		game_update_from_message(ctx, msg)
 
 		for player_id, socket in ctx.sockets_state {
-			hand := ctx.players[player_id].hand
+			player_active := false
+			hand: Hand
+			if player_id == game_state.white.id {
+				hand = game_state.white.hand
+				player_active = game_state.is_white_to_play
+			}
+			if player_id == game_state.black.id {
+				hand = game_state.black.hand
+				player_active = !game_state.is_white_to_play
+			}
+
 			send_package(
 				socket,
 				Server_To_Client {
 					client_game_state = Client_Game_State {
-						world = ctx.world,
+						world = game_state.world,
 						hand = hand,
-						player_active = player_id == ctx.player_active,
+						player_active = player_active,
 					},
 				},
 			)
@@ -160,13 +191,23 @@ game_update_from_message :: proc(
 	ctx: ^Server_Context,
 	msg: Message(Client_To_Server),
 ) {
-	if msg.id not_in ctx.players {
+
+	game_state, ok := ctx.game_state.(Server_Game_State)
+	if !ok do return
+
+	player: ^Player
+	if msg.id == game_state.white.id {
+		player = &game_state.white
+	}
+	if msg.id == game_state.black.id {
+		player = &game_state.black
+	}
+	if player == nil {
 		log_red("Player not found", msg.id)
 		return
 	}
-	player := &ctx.players[msg.id]
 
-	for &entity in ctx.world.entities {
+	for &entity in game_state.world.entities {
 		entity.draw_position = f_vec_2(entity.position)
 	}
 
@@ -179,17 +220,12 @@ game_update_from_message :: proc(
 
 		// Move pieces
 		// TODO: decide piece order
-		for &entity in ctx.world.entities {
-			entity_run_action(&ctx.world, &entity)
+		for &entity in game_state.world.entities {
+			entity_run_action(&game_state.world, &entity)
 		}
 
 		// Activate next player
-		players, _ := slice.map_keys(ctx.players)
-		player_idx, found := slice.linear_search(players, msg.id)
-		if found {
-			player_next_idx := (player_idx + 1) % len(players)
-			ctx.player_active = players[player_next_idx]
-		}
+		game_state.is_white_to_play = !game_state.is_white_to_play
 	}
 
 	_, is_deck := msg.content.deck.(Deck)
@@ -201,7 +237,7 @@ game_update_from_message :: proc(
 	if is_card_action {
 		card_id := player.hand.cards[card_action.card_idx]
 		card := card_get(card_id)
-		card.play(&ctx.world, card_action.target)
+		card.play(&game_state.world, card_action.target)
 
 		ordered_remove(&player.hand.cards, card_action.card_idx)
 	}
