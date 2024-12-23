@@ -20,9 +20,10 @@ Server_Context :: struct {
 }
 
 Player :: struct {
-	id:   Player_Id,
-	hand: Hand,
-	deck: Deck,
+	id:    Player_Id,
+	color: Piece_Color,
+	hand:  Hand,
+	deck:  Deck,
 }
 
 Client_Game_State :: struct {
@@ -99,11 +100,13 @@ game_start :: proc(ctx: ^Server_Context) {
 		}
 		if game_state.white.id == 0 {
 			log_magenta("White player is", player_id)
+			player.color = Piece_Color.white
 			game_state.white = player
 			continue
 		}
 		if game_state.black.id == 0 {
 			log_magenta("Black player is", player_id)
+			player.color = Piece_Color.black
 			game_state.black = player
 			continue
 		}
@@ -261,7 +264,7 @@ game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 		card_id := player.hand.cards[card_action.card_idx]
 		card := card_get(card_id)
 		log_magenta("Play", card_id)
-		if card.play(&game_state.world, card_action.target) {
+		if card.play(&game_state.world, player.color, card_action.target) {
 			ordered_remove(&player.hand.cards, card_action.card_idx)
 		}
 	}

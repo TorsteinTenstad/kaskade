@@ -3,7 +3,7 @@ package main
 
 import rl "vendor:raylib"
 
-Action_Id :: enum {
+Entity_Kind :: enum {
 	pawn,
 	knight,
 	bishop,
@@ -19,12 +19,11 @@ Piece_Color :: enum {
 
 Entity :: struct {
 	id:            int,
-	action_id:     Action_Id,
+	kind:          Entity_Kind,
+	color:         Piece_Color,
 	position:      IVec2,
 	draw_position: FVec2,
-	sprite_id:     Sprite_Id,
 	capturing:     bool,
-	color:         Piece_Color,
 }
 
 entity_try_move_to :: proc(
@@ -48,7 +47,7 @@ entity_try_move_to :: proc(
 }
 
 entity_run_action :: proc(world: ^World, entity: ^Entity) {
-	switch entity.action_id {
+	switch entity.kind {
 	case .pawn:
 		entity_try_move_to(world, entity, entity.position + IVec2{0, -1})
 	case .knight:
@@ -78,8 +77,6 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 }
 
 entity_step :: proc(ctx: ^Client_Context, entity: ^Entity) {
-	// ctx := get_context()
-	// assert(entity.id == ctx.game_state.)
 	assert(entity.id == ctx.active_entity_id)
 
 	entity.draw_position = move_towards(
@@ -109,11 +106,33 @@ select_next_entity :: proc(ctx: ^Client_Context) {
 
 entity_draw :: proc(entity: ^Entity) {
 	graphics := &get_context().graphics
-	texture := graphics.sprites[entity.sprite_id]
+	sprite_id := entity_get_sprite_id(entity)
+	texture := graphics.sprites[sprite_id]
 	surface_position := camera_world_to_surface(
 		&graphics.camera,
 		entity.draw_position,
 	)
 	rl.DrawTextureEx(texture, surface_position - {1, 0}, 0, 1.0, rl.BLACK)
 	rl.DrawTextureEx(texture, surface_position, 0, 1.0, rl.WHITE)
+}
+
+entity_get_sprite_id :: proc(entity: ^Entity) -> Sprite_Id {
+	is_white := entity.color == Piece_Color.white
+
+	switch entity.kind {
+	case .pawn:
+		return is_white ? Sprite_Id.pawn_w : Sprite_Id.pawn_b
+	case .knight:
+		return is_white ? Sprite_Id.knight_w : Sprite_Id.knight_b
+	case .bishop:
+		return is_white ? Sprite_Id.bishop_w : Sprite_Id.bishop_b
+	case .rook:
+		return is_white ? Sprite_Id.rook_w : Sprite_Id.rook_b
+	case .king:
+		return is_white ? Sprite_Id.king_w : Sprite_Id.king_b
+	case .queen:
+		return is_white ? Sprite_Id.queen_w : Sprite_Id.queen_b
+	}
+	assert(false, "non-exhaustive")
+	return Sprite_Id.player
 }

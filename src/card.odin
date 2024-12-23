@@ -24,7 +24,7 @@ Card :: struct {
 	name:        string,
 	description: string,
 	type:        Card_Type,
-	play:        proc(_: ^World, _: IVec2) -> bool,
+	play:        proc(_: ^World, _: Piece_Color, _: IVec2) -> bool,
 }
 
 card_draw_gui :: proc(card: ^Physical_Card) {
@@ -80,14 +80,14 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		return Card {
 			name = "Pawn",
 			description = "TODO: description",
-			play = proc(world: ^World, position: IVec2) -> bool {
+			play = proc(
+				world: ^World,
+				color: Piece_Color,
+				position: IVec2,
+			) -> bool {
 				world_add_entity(
 					world,
-					Entity {
-						action_id = .pawn,
-						sprite_id = .pawn,
-						position = position,
-					},
+					Entity{kind = .pawn, color = color, position = position},
 				)
 				return true
 			},
@@ -96,14 +96,14 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		return Card {
 			name = "Knight",
 			description = "TODO: description",
-			play = proc(world: ^World, position: IVec2) -> bool {
+			play = proc(
+				world: ^World,
+				color: Piece_Color,
+				position: IVec2,
+			) -> bool {
 				world_add_entity(
 					world,
-					Entity {
-						action_id = .knight,
-						sprite_id = .knight,
-						position = position,
-					},
+					Entity{kind = .knight, color = color, position = position},
 				)
 				return true
 			},
@@ -112,14 +112,14 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		return Card {
 			name = "Bishop",
 			description = "TODO: description",
-			play = proc(world: ^World, position: IVec2) -> bool {
+			play = proc(
+				world: ^World,
+				color: Piece_Color,
+				position: IVec2,
+			) -> bool {
 				world_add_entity(
 					world,
-					Entity {
-						action_id = .bishop,
-						sprite_id = .bishop,
-						position = position,
-					},
+					Entity{kind = .bishop, color = color, position = position},
 				)
 				return true
 			},
@@ -128,14 +128,14 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		return Card {
 			name = "Rook",
 			description = "TODO: description",
-			play = proc(world: ^World, position: IVec2) -> bool {
+			play = proc(
+				world: ^World,
+				color: Piece_Color,
+				position: IVec2,
+			) -> bool {
 				world_add_entity(
 					world,
-					Entity {
-						action_id = .rook,
-						sprite_id = .rook,
-						position = position,
-					},
+					Entity{kind = .rook, color = color, position = position},
 				)
 				return true
 			},
@@ -144,14 +144,14 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		return Card {
 			name = "Queen",
 			description = "TODO: description",
-			play = proc(world: ^World, position: IVec2) -> bool {
+			play = proc(
+				world: ^World,
+				color: Piece_Color,
+				position: IVec2,
+			) -> bool {
 				world_add_entity(
 					world,
-					Entity {
-						action_id = .queen,
-						sprite_id = .queen,
-						position = position,
-					},
+					Entity{kind = .queen, color = color, position = position},
 				)
 				return true
 			},
@@ -160,14 +160,14 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		return Card {
 			name = "King",
 			description = "TODO: description",
-			play = proc(world: ^World, position: IVec2) -> bool {
+			play = proc(
+				world: ^World,
+				color: Piece_Color,
+				position: IVec2,
+			) -> bool {
 				world_add_entity(
 					world,
-					Entity {
-						action_id = .king,
-						sprite_id = .king,
-						position = position,
-					},
+					Entity{kind = .king, color = color, position = position},
 				)
 				return true
 			},
@@ -176,7 +176,11 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		return Card {
 			name = "Obduction",
 			description = "Remove all pieces in a 3x3 square.",
-			play = proc(world: ^World, position: IVec2) -> bool {
+			play = proc(
+				world: ^World,
+				color: Piece_Color,
+				position: IVec2,
+			) -> bool {
 				death_note := make([dynamic]int)
 				defer delete(death_note)
 
@@ -196,7 +200,11 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		return Card {
 			name = "Haste",
 			description = "Trigger a piece",
-			play = proc(world: ^World, position: IVec2) -> bool {
+			play = proc(
+				world: ^World,
+				color: Piece_Color,
+				position: IVec2,
+			) -> bool {
 				entity, found := world_get_entity(world, position).(^Entity)
 				found or_return
 				entity_run_action(world, entity)
