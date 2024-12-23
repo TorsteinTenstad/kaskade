@@ -13,6 +13,7 @@ Card_Id :: enum {
 	king,
 	haste,
 	obduction,
+	give_arms,
 }
 
 Card_Kind :: enum {
@@ -224,6 +225,23 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				)
 			},
 		}
+	case .haste:
+		return Card {
+			name = "Haste",
+			kind = Card_Kind.spell,
+			description = "Trigger a piece",
+			cost = 2,
+			play = proc(
+				world: ^World,
+				color: Piece_Color,
+				position: IVec2,
+			) -> bool {
+				entity, found := world_get_entity(world, position).(^Entity)
+				found or_return
+				entity_run_action(world, entity)
+				return true
+			},
+		}
 	case .obduction:
 		return Card {
 			name = "Obduction",
@@ -250,11 +268,11 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				return true
 			},
 		}
-	case .haste:
+	case .give_arms:
 		return Card {
-			name = "Haste",
+			name = "Give Arms",
 			kind = Card_Kind.spell,
-			description = "Trigger a piece",
+			description = "Give a piece the ability to capture",
 			cost = 2,
 			play = proc(
 				world: ^World,
@@ -263,7 +281,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			) -> bool {
 				entity, found := world_get_entity(world, position).(^Entity)
 				found or_return
-				entity_run_action(world, entity)
+				entity.capturing = true
 				return true
 			},
 		}
