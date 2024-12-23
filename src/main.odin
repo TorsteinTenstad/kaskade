@@ -148,6 +148,11 @@ _main_draw :: proc(ctx: ^Client_Context) {
 		draw_text(format(rl.GetFPS()), {16, 0})
 		draw_text(format("You are", ctx.game_state.player_color), {16, 32})
 		draw_text(format(ctx.game_state.active_color, "to play"), {16, 64})
+		// Cards are drawn on y=96
+		draw_text(
+			format("Mana:", ctx.game_state.mana, "/", ctx.game_state.max_mana),
+			{16, 128},
+		)
 
 		hand_draw_gui(&ctx.physical_hand, camera)
 	}
