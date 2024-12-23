@@ -173,7 +173,7 @@ game_update_from_message :: proc(
 	_, is_end_turn := msg.content.end_turn.(End_Turn)
 	if is_end_turn {
 		// Draw cards
-		for len(player.hand.cards) < CARDS_MAX {
+		for len(player.hand.cards) < CARDS_MAX && len(player.deck.cards) > 0 {
 			hand_draw_from_deck(&player.hand, &player.deck)
 		}
 

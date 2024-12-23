@@ -115,9 +115,7 @@ hand_step_player :: proc(ctx: ^Client_Context) {
 			hand.hover_target = mouse_world_position
 
 			if rl.IsMouseButtonReleased(.LEFT) {
-				if hand_play(ctx, hover_index, world, mouse_world_position) {
-					// player_end_turn(game_state)
-				}
+				hand_play(ctx, hover_index, world, mouse_world_position)
 				_hand_unhover(hand)
 			}
 		}
