@@ -3,7 +3,6 @@ package main
 
 import "core:math/rand"
 import "core:net"
-import "core:slice"
 import "core:sync"
 
 Headless_Client_Context :: struct {
@@ -104,13 +103,20 @@ game_state_apply_incoming :: proc(ctx: ^Client_Context) {
 		ctx.active_entity_id = ctx.game_state.world.entities[0].id
 	}
 
-	cards_prev := slice.mapper(
-		ctx.physical_hand.cards[:],
-		proc(card: Physical_Card) -> Card_Id {return card.card.id},
-	)
-	defer delete(cards_prev)
+	cards_equal :=
+		len(ctx.physical_hand.cards) == len(ctx.game_state.hand.cards)
 
-	if !slice.equal(cards_prev, ctx.game_state.hand.cards[:]) {
+	if cards_equal {
+		for i in 0 ..< len(ctx.physical_hand.cards) {
+			if ctx.physical_hand.cards[i].card.id !=
+			   ctx.game_state.hand.cards[i] {
+				cards_equal = false
+				break
+			}
+		}
+	}
+
+	if !cards_equal {
 		clear(&ctx.physical_hand.cards)
 
 		for card_id in ctx.game_state.hand.cards {
@@ -122,8 +128,6 @@ game_state_apply_incoming :: proc(ctx: ^Client_Context) {
 		ctx.physical_hand.hover_index = nil
 		ctx.physical_hand.hover_is_selected = false
 		ctx.physical_hand.hover_target = nil
-
-		// TODO: Fix animations
 	}
 }
 

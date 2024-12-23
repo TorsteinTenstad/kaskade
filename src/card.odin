@@ -80,6 +80,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 	switch card_id {
 	case .pawn:
 		return Card {
+			id = .pawn,
 			name = "Pawn",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
@@ -104,6 +105,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		}
 	case .knight:
 		return Card {
+			id = .knight,
 			name = "Knight",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
@@ -128,6 +130,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		}
 	case .bishop:
 		return Card {
+			id = .bishop,
 			name = "Bishop",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
@@ -153,6 +156,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		}
 	case .rook:
 		return Card {
+			id = .rook,
 			name = "Rook",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
@@ -178,6 +182,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		}
 	case .queen:
 		return Card {
+			id = .queen,
 			name = "Queen",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
@@ -202,6 +207,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		}
 	case .king:
 		return Card {
+			id = .king,
 			name = "King",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
@@ -226,6 +232,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		}
 	case .obduction:
 		return Card {
+			id = .obduction,
 			name = "Obduction",
 			kind = Card_Kind.spell,
 			description = "Remove all pieces in a 3x3 square.",
@@ -252,6 +259,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		}
 	case .haste:
 		return Card {
+			id = .haste,
 			name = "Haste",
 			kind = Card_Kind.spell,
 			description = "Trigger a piece",
