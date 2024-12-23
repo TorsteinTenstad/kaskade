@@ -89,11 +89,17 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				return player_try_place_entity(
-					world,
-					color,
-					Entity{kind = .pawn, color = color, position = position},
-				) != nil
+				return(
+					player_try_place_entity(
+						world,
+						Entity {
+							kind = .pawn,
+							color = color,
+							position = position,
+						},
+					) !=
+					nil \
+				)
 			},
 		}
 	case .knight:
@@ -107,11 +113,17 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				return player_try_place_entity(
-					world,
-					color,
-					Entity{kind = .knight, color = color, position = position},
-				) != nil
+				return(
+					player_try_place_entity(
+						world,
+						Entity {
+							kind = .knight,
+							color = color,
+							position = position,
+						},
+					) !=
+					nil \
+				)
 			},
 		}
 	case .bishop:
@@ -125,15 +137,18 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				return player_try_place_entity(
-					world,
-					color,
-					Entity {
-						kind = .bishop,
-						capturing = true,
-						position = position,
-					},
-				) != nil
+				return(
+					player_try_place_entity(
+						world,
+						Entity {
+							kind = .bishop,
+							color = color,
+							capturing = true,
+							position = position,
+						},
+					) !=
+					nil \
+				)
 			},
 		}
 	case .rook:
@@ -147,15 +162,18 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				return player_try_place_entity(
-					world,
-					color,
-					Entity {
-						kind = .rook,
-						capturing = true,
-						position = position,
-					},
-				) != nil
+				return(
+					player_try_place_entity(
+						world,
+						Entity {
+							kind = .rook,
+							capturing = true,
+							color = color,
+							position = position,
+						},
+					) !=
+					nil \
+				)
 			},
 		}
 	case .queen:
@@ -169,11 +187,17 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				return player_try_place_entity(
-					world,
-					color,
-					Entity{kind = .queen, color = color, position = position},
-				) != nil
+				return(
+					player_try_place_entity(
+						world,
+						Entity {
+							kind = .queen,
+							color = color,
+							position = position,
+						},
+					) !=
+					nil \
+				)
 			},
 		}
 	case .king:
@@ -187,11 +211,17 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				return player_try_place_entity(
-					world,
-					color,
-					Entity{kind = .king, color = color, position = position},
-				) != nil
+				return(
+					player_try_place_entity(
+						world,
+						Entity {
+							kind = .king,
+							color = color,
+							position = position,
+						},
+					) !=
+					nil \
+				)
 			},
 		}
 	case .obduction:

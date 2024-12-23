@@ -6,10 +6,11 @@ import "core:thread"
 Player_Id :: distinct u64 //uuid
 
 Server_Game_State :: struct {
-	world:        World,
-	active_color: Piece_Color,
-	white:        Player,
-	black:        Player,
+	world:              World,
+	active_color:       Piece_Color,
+	white:              Player,
+	black:              Player,
+	start_of_turn_mana: int,
 }
 
 Server_Context :: struct {
@@ -22,6 +23,7 @@ Server_Context :: struct {
 Player :: struct {
 	id:    Player_Id,
 	color: Piece_Color,
+	mana:  int,
 	hand:  Hand,
 	deck:  Deck,
 }
@@ -31,6 +33,8 @@ Client_Game_State :: struct {
 	hand:         Hand,
 	player_color: Piece_Color,
 	active_color: Piece_Color,
+	mana:         int,
+	max_mana:     int,
 }
 
 Server_To_Client :: struct {
@@ -88,7 +92,8 @@ listen_tcp :: proc(
 game_start :: proc(ctx: ^Server_Context) {
 
 	game_state := Server_Game_State {
-		active_color = Piece_Color.white,
+		active_color       = Piece_Color.white,
+		start_of_turn_mana = 1,
 	}
 	log_magenta("Starting game with players", ctx.sockets_event)
 	for player_id, _ in ctx.sockets_event {
@@ -196,6 +201,8 @@ game_state_send :: proc(ctx: ^Server_Context, player_id: Player_Id) {
 	if player != nil {
 		client_game_state.hand = player.hand
 		client_game_state.player_color = player.color
+		client_game_state.mana = player.mana
+		client_game_state.max_mana = game_state.start_of_turn_mana
 	}
 
 	send_package(
@@ -248,11 +255,21 @@ game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 			entity_run_action(&game_state.world, &entity)
 		}
 
-		// Activate next player
+		// Update max mana
+		if game_state.active_color == Piece_Color.white {
+			game_state.start_of_turn_mana = max(
+				MAX_MANA,
+				game_state.start_of_turn_mana + 1,
+			)
+		}
+
+		// Activate next player and refill their mana
 		if game_state.active_color == Piece_Color.black {
 			game_state.active_color = Piece_Color.white
+			game_state.white.mana = game_state.start_of_turn_mana
 		} else {
 			game_state.active_color = Piece_Color.black
+			game_state.black.mana = game_state.start_of_turn_mana
 		}
 
 		log_magenta(game_state.active_color, "to play")
@@ -268,7 +285,7 @@ game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 		card_id := player.hand.cards[card_action.card_idx]
 		card := card_get(card_id)
 		if card.play(&game_state.world, player.color, card_action.target) {
-			log_magenta("Play", card_id)
+			log_magenta(game_state.active_color, "played", card_id)
 			ordered_remove(&player.hand.cards, card_action.card_idx)
 		}
 	}

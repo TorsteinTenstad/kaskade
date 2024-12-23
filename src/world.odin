@@ -43,12 +43,11 @@ player_close_to_king :: proc(
 
 player_try_place_entity :: proc(
 	world: ^World,
-	player: Piece_Color,
 	entity: Entity,
 ) -> Maybe(int) {
 	if world_is_empty(world, entity.position) &&
-	   (player_in_spawn_zone(player, entity.position) ||
-			   player_close_to_king(world, player, entity.position)) {
+	   (player_in_spawn_zone(entity.color, entity.position) ||
+			   player_close_to_king(world, entity.color, entity.position)) {
 		return world_add_entity(world, entity)
 	}
 	return nil

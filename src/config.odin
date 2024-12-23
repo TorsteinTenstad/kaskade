@@ -24,6 +24,7 @@ ONE_PIXEL :: (1.0 / f32(GRID_SIZE))
 CARD_WIDTH :: 120.0
 CARD_HEIGHT :: 200.0
 CARDS_MAX :: 6
+MAX_MANA :: 5
 
 FONT_DEFAULT :: Font_Id.lilita_one_regular
 
