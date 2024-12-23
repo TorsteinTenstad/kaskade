@@ -89,11 +89,11 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				world_add_entity(
+				return player_try_place_entity(
 					world,
+					color,
 					Entity{kind = .pawn, color = color, position = position},
-				)
-				return true
+				) != nil
 			},
 		}
 	case .knight:
@@ -107,11 +107,11 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				world_add_entity(
+				return player_try_place_entity(
 					world,
+					color,
 					Entity{kind = .knight, color = color, position = position},
-				)
-				return true
+				) != nil
 			},
 		}
 	case .bishop:
@@ -125,16 +125,15 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				world_add_entity(
+				return player_try_place_entity(
 					world,
+					color,
 					Entity {
 						kind = .bishop,
-						color = color,
 						capturing = true,
 						position = position,
 					},
-				)
-				return true
+				) != nil
 			},
 		}
 	case .rook:
@@ -148,16 +147,15 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				world_add_entity(
+				return player_try_place_entity(
 					world,
+					color,
 					Entity {
 						kind = .rook,
-						color = color,
 						capturing = true,
 						position = position,
 					},
-				)
-				return true
+				) != nil
 			},
 		}
 	case .queen:
@@ -171,11 +169,11 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				world_add_entity(
+				return player_try_place_entity(
 					world,
+					color,
 					Entity{kind = .queen, color = color, position = position},
-				)
-				return true
+				) != nil
 			},
 		}
 	case .king:
@@ -189,11 +187,11 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				world_add_entity(
+				return player_try_place_entity(
 					world,
+					color,
 					Entity{kind = .king, color = color, position = position},
-				)
-				return true
+				) != nil
 			},
 		}
 	case .obduction:

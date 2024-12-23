@@ -6,6 +6,54 @@ World :: struct {
 	next_world_object_id: int,
 }
 
+player_in_spawn_zone :: proc(player: Piece_Color, pos: IVec2) -> bool {
+	switch player {
+	case .white:
+		return(
+			0 <= pos.x &&
+			pos.x < BOARD_WIDTH &&
+			(BOARD_HEIGHT - SPAWN_ZONE_DEPTH) <= pos.y &&
+			pos.y < BOARD_WIDTH \
+		)
+	case .black:
+		return(
+			0 <= pos.x &&
+			pos.x < BOARD_WIDTH &&
+			0 <= pos.y &&
+			pos.y < SPAWN_ZONE_DEPTH \
+		)
+	}
+	assert(false, "non-exhaustive")
+	return false
+}
+
+player_close_to_king :: proc(
+	world: ^World,
+	player: Piece_Color,
+	pos: IVec2,
+) -> bool {
+	for &entity in world.entities {
+		if entity.kind == .king && entity.color == player {
+			distance_vec := pos - entity.position
+			return abs(distance_vec.x) <= 1 && abs(distance_vec.y) <= 1
+		}
+	}
+	return false
+}
+
+player_try_place_entity :: proc(
+	world: ^World,
+	player: Piece_Color,
+	entity: Entity,
+) -> Maybe(int) {
+	if world_is_empty(world, entity.position) &&
+	   (player_in_spawn_zone(player, entity.position) ||
+			   player_close_to_king(world, player, entity.position)) {
+		return world_add_entity(world, entity)
+	}
+	return nil
+}
+
 world_add_entity :: proc(world: ^World, entity: Entity) -> int {
 	entity := entity
 	entity.draw_position = f_vec_2(entity.position)

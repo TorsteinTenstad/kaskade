@@ -267,8 +267,8 @@ game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 	if is_card_action {
 		card_id := player.hand.cards[card_action.card_idx]
 		card := card_get(card_id)
-		log_magenta("Play", card_id)
 		if card.play(&game_state.world, player.color, card_action.target) {
+			log_magenta("Play", card_id)
 			ordered_remove(&player.hand.cards, card_action.card_idx)
 		}
 	}
