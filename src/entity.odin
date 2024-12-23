@@ -12,15 +12,53 @@ Action_Id :: enum {
 	king,
 }
 
+entity_try_move_to :: proc(
+	world: ^World,
+	entity: ^Entity,
+	new_pos: IVec2,
+) -> bool {
+	other_entity, occupied := world_get_entity(world, new_pos).(^Entity)
+	if occupied {
+		if entity.capturing {
+			world_remove_entity(world, other_entity)
+			entity.position = new_pos
+			return true
+		} else {
+			return false
+		}
+	} else {
+		entity.position = new_pos
+		return true
+	}
+}
+
 entity_run_action :: proc(world: ^World, entity: ^Entity) {
 	switch entity.action_id {
 	case .pawn:
-		entity.position.y -= 1
+		entity_try_move_to(world, entity, entity.position + IVec2{0, -1})
 	case .knight:
+		entity_try_move_to(world, entity, entity.position + IVec2{0, -1})
+		for !world_is_empty(world, entity.position + IVec2{0, -1}) {
+			if entity_try_move_to(
+				world,
+				entity,
+				entity.position + IVec2{1, -1},
+			) {continue}
+
+			if entity_try_move_to(
+				world,
+				entity,
+				entity.position + IVec2{-1, -1},
+			) {continue}
+
+			break
+		}
 	case .bishop:
+		entity_try_move_to(world, entity, entity.position + IVec2{0, -1})
 	case .rook:
 	case .queen:
 	case .king:
+		entity_try_move_to(world, entity, entity.position + IVec2{0, -1})
 	}
 }
 
@@ -30,6 +68,7 @@ Entity :: struct {
 	position:      IVec2,
 	draw_position: FVec2,
 	sprite_id:     Sprite_Id,
+	capturing:     bool,
 }
 
 entity_step :: proc(ctx: ^Client_Context, entity: ^Entity) {
