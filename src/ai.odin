@@ -43,12 +43,12 @@ ai_do_action :: proc(
 
 		if card.kind == Card_Kind.piece {
 			if game_state.player_color == Piece_Color.black {
-				target = IVec2{rand.int_max(BOARD_WIDTH), rand.int_max(3)}
+				target = IVec2{rand.int_max(BOARD_WIDTH), rand.int_max(2)}
 			}
 			if game_state.player_color == Piece_Color.white {
 				target = IVec2 {
 					rand.int_max(BOARD_WIDTH),
-					BOARD_HEIGHT - 1 - rand.int_max(3),
+					BOARD_HEIGHT - 1 - rand.int_max(2),
 				}
 			}
 		}

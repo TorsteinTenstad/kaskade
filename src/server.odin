@@ -243,6 +243,8 @@ game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 		// Move pieces
 		// TODO: decide piece order
 		for &entity in game_state.world.entities {
+			if entity.color != game_state.active_color do continue
+
 			entity_run_action(&game_state.world, &entity)
 		}
 
