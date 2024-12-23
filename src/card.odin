@@ -15,15 +15,16 @@ Card_Id :: enum {
 	obduction,
 }
 
-Card_Type :: enum {
+Card_Kind :: enum {
 	piece,
 	spell,
 }
+
 Card :: struct {
 	id:          Card_Id,
 	name:        string,
 	description: string,
-	type:        Card_Type,
+	kind:        Card_Kind,
 	play:        proc(_: ^World, _: Piece_Color, _: IVec2) -> bool,
 }
 
@@ -52,7 +53,7 @@ card_draw_gui :: proc(card: ^Physical_Card) {
 }
 
 card_get_outline_color :: proc(card: ^Card) -> rl.Color {
-	switch card.type {
+	switch card.kind {
 	case .piece:
 		return rl.BLACK
 	case .spell:
@@ -79,6 +80,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 	case .pawn:
 		return Card {
 			name = "Pawn",
+			kind = Card_Kind.piece,
 			description = "TODO: description",
 			play = proc(
 				world: ^World,
@@ -95,6 +97,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 	case .knight:
 		return Card {
 			name = "Knight",
+			kind = Card_Kind.piece,
 			description = "TODO: description",
 			play = proc(
 				world: ^World,
@@ -111,6 +114,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 	case .bishop:
 		return Card {
 			name = "Bishop",
+			kind = Card_Kind.piece,
 			description = "TODO: description",
 			play = proc(
 				world: ^World,
@@ -132,6 +136,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 	case .rook:
 		return Card {
 			name = "Rook",
+			kind = Card_Kind.piece,
 			description = "TODO: description",
 			play = proc(
 				world: ^World,
@@ -153,6 +158,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 	case .queen:
 		return Card {
 			name = "Queen",
+			kind = Card_Kind.piece,
 			description = "TODO: description",
 			play = proc(
 				world: ^World,
@@ -169,6 +175,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 	case .king:
 		return Card {
 			name = "King",
+			kind = Card_Kind.piece,
 			description = "TODO: description",
 			play = proc(
 				world: ^World,
@@ -185,6 +192,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 	case .obduction:
 		return Card {
 			name = "Obduction",
+			kind = Card_Kind.spell,
 			description = "Remove all pieces in a 3x3 square.",
 			play = proc(
 				world: ^World,
@@ -209,6 +217,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 	case .haste:
 		return Card {
 			name = "Haste",
+			kind = Card_Kind.spell,
 			description = "Trigger a piece",
 			play = proc(
 				world: ^World,

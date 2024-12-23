@@ -33,9 +33,8 @@ entity_try_move_to :: proc(
 ) -> bool {
 	other_entity, occupied := world_get_entity(world, target).(^Entity)
 	if occupied {
-		if entity.capturing {
+		if entity.capturing && other_entity.color != entity.color {
 			world_remove_entity(world, other_entity)
-			log_magenta(entity.id, "captured", other_entity.id)
 			entity.position = target
 			return true
 		} else {
@@ -47,44 +46,40 @@ entity_try_move_to :: proc(
 	}
 }
 
-entity_positive_y :: proc(color: Piece_Color) -> int {
-	switch color {
-	case .black:
+entity_direction :: proc(color: Piece_Color) -> int {
+	if color == .black {
 		return 1
-	case .white:
-		return -1
 	}
+	return -1
 }
 
 entity_run_action :: proc(world: ^World, entity: ^Entity) {
-	entity_positive_y := entity_positive_y(entity.color)
+	entity_dir := entity_direction(entity.color)
+
 	switch entity.kind {
 	case .pawn:
 		entity_try_move_to(
 			world,
 			entity,
-			entity.position + IVec2{0, entity_positive_y},
+			entity.position + IVec2{0, entity_dir},
 		)
 	case .knight:
 		entity_try_move_to(
 			world,
 			entity,
-			entity.position + IVec2{0, entity_positive_y},
+			entity.position + IVec2{0, entity_dir},
 		)
-		for !world_is_empty(
-			    world,
-			    entity.position + IVec2{0, entity_positive_y},
-		    ) {
+		for !world_is_empty(world, entity.position + IVec2{0, entity_dir}) {
 			if entity_try_move_to(
 				world,
 				entity,
-				entity.position + IVec2{1, entity_positive_y},
+				entity.position + IVec2{1, entity_dir},
 			) {continue}
 
 			if entity_try_move_to(
 				world,
 				entity,
-				entity.position + IVec2{-1, entity_positive_y},
+				entity.position + IVec2{-1, entity_dir},
 			) {continue}
 
 			break
@@ -93,7 +88,7 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 		entity_try_move_to(
 			world,
 			entity,
-			entity.position + IVec2{0, entity_positive_y},
+			entity.position + IVec2{0, entity_dir},
 		)
 	case .rook:
 		for x in (entity.position.x + 1) ..< BOARD_WIDTH {
@@ -125,7 +120,7 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 		entity_try_move_to(
 			world,
 			entity,
-			entity.position + IVec2{0, entity_positive_y},
+			entity.position + IVec2{0, entity_dir},
 		)
 	}
 }

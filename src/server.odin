@@ -27,9 +27,10 @@ Player :: struct {
 }
 
 Client_Game_State :: struct {
-	world:            World,
-	hand:             Hand,
-	is_active_player: bool,
+	world:        World,
+	hand:         Hand,
+	player_color: Piece_Color,
+	active_color: Piece_Color,
 }
 
 Server_To_Client :: struct {
@@ -179,26 +180,27 @@ game_state_send :: proc(ctx: ^Server_Context, player_id: Player_Id) {
 
 	if !ok do return
 
-	player_active := false
-	hand: Hand
+	player: ^Player
 	if player_id == game_state.white.id {
-		hand = game_state.white.hand
-		player_active = game_state.active_color == Piece_Color.white
+		player = &game_state.white
 	}
 	if player_id == game_state.black.id {
-		hand = game_state.black.hand
-		player_active = game_state.active_color == Piece_Color.black
+		player = &game_state.black
+	}
+
+	client_game_state := Client_Game_State {
+		world        = game_state.world,
+		active_color = game_state.active_color,
+	}
+
+	if player != nil {
+		client_game_state.hand = player.hand
+		client_game_state.player_color = player.color
 	}
 
 	send_package(
 		ctx.sockets_state[player_id],
-		Server_To_Client {
-			client_game_state = Client_Game_State {
-				world = game_state.world,
-				hand = hand,
-				is_active_player = player_active,
-			},
-		},
+		Server_To_Client{client_game_state = client_game_state},
 	)
 }
 

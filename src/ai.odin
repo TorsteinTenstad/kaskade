@@ -5,7 +5,7 @@ import "core:math/rand"
 import "core:time"
 
 ai_run :: proc() {
-	is_active_player := false
+	active_color: Piece_Color = nil
 
 	ctx := headless_client_context_create()
 
@@ -19,12 +19,12 @@ ai_run :: proc() {
 		game_state, ok := &server_to_client.client_game_state.(Client_Game_State)
 		if !ok do continue
 
-		if game_state.is_active_player &&
-		   game_state.is_active_player != is_active_player {
+		if game_state.player_color == game_state.active_color &&
+		   game_state.active_color != active_color {
 
 			ai_do_action(&ctx, game_state)
 		}
-		is_active_player = game_state.is_active_player
+		active_color = game_state.active_color
 	}
 }
 
@@ -37,7 +37,21 @@ ai_do_action :: proc(
 		time.sleep(time.Second)
 
 		card_idx := rand.int_max(len(game_state.hand.cards))
-		target := IVec2{rand.int_max(8), rand.int_max(8)}
+
+		card := card_get(game_state.hand.cards[card_idx])
+		target := IVec2{rand.int_max(BOARD_WIDTH), rand.int_max(BOARD_HEIGHT)}
+
+		if card.kind == Card_Kind.piece {
+			if game_state.player_color == Piece_Color.black {
+				target = IVec2{rand.int_max(BOARD_WIDTH), rand.int_max(3)}
+			}
+			if game_state.player_color == Piece_Color.white {
+				target = IVec2 {
+					rand.int_max(BOARD_WIDTH),
+					BOARD_HEIGHT - 1 - rand.int_max(3),
+				}
+			}
+		}
 
 		send_package(
 			ctx.socket_event,

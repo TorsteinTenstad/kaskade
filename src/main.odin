@@ -145,11 +145,9 @@ _main_draw :: proc(ctx: ^Client_Context) {
 			rl.WHITE,
 		)
 
-		draw_text(format(rl.GetFPS()), {16, 16})
-		draw_text(
-			format("Your turn:", ctx.game_state.is_active_player),
-			{16, 48},
-		)
+		draw_text(format(rl.GetFPS()), {16, 0})
+		draw_text(format("You are", ctx.game_state.player_color), {16, 32})
+		draw_text(format(ctx.game_state.active_color, "to play"), {16, 64})
 
 		hand_draw_gui(&ctx.physical_hand, camera)
 	}
