@@ -25,10 +25,7 @@ main :: proc() {
 	_client_context = client_context_create()
 	graphics_create(&_client_context)
 
-	thread.create_and_start_with_data(
-		&_client_context,
-		read_state_from_network,
-	)
+	thread.create_and_start_with_data(&_client_context, recv_state_from_server)
 
 	for !rl.WindowShouldClose() {
 		_main_step(&_client_context)
