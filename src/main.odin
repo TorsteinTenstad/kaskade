@@ -43,6 +43,11 @@ _main_step :: proc(ctx: ^Client_Context) {
 	// Hand
 	hand_step_player(ctx)
 	hand_step(ctx)
+
+	// Input
+	if rl.IsKeyPressed(.ENTER) {
+		send_package(ctx.socket_event, Client_To_Server{end_turn = End_Turn{}})
+	}
 }
 
 COLOR_BACKGROUND_DARK: rl.Color : {21, 18, 20, 255}

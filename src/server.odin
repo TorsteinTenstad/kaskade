@@ -1,6 +1,7 @@
 #+vet unused shadowing using-stmt style semicolon
 package main
 import "core:net"
+import "core:slice"
 import "core:thread"
 
 Player_Id :: distinct u32
@@ -8,6 +9,7 @@ Player_Id :: distinct u32
 Server_Context :: struct {
 	world:         World,
 	players:       map[Player_Id]Player,
+	player_active: Player_Id,
 	sockets_event: map[Player_Id]net.TCP_Socket,
 	sockets_state: map[Player_Id]net.TCP_Socket,
 	message_queue: Message_Queue(Client_To_Server),
@@ -19,8 +21,9 @@ Player :: struct {
 }
 
 Client_Game_State :: struct {
-	world: World,
-	hand:  Hand,
+	world:         World,
+	hand:          Hand,
+	player_active: bool,
 }
 
 Server_To_Client :: struct {
@@ -48,23 +51,16 @@ listen_tcp :: proc(
 		client_socket, ip, accept_err := net.accept_tcp(socket_state)
 		assert(accept_err == nil, format(accept_err))
 
-		id: u32
-		switch addr in ip.address {
-		case net.IP4_Address:
-			for i in 0 ..< 4 {
-				id += u32(addr[i]) << uint(i * 8)
-			}
-		case net.IP6_Address:
-		// TODO
+		player_id, ok := endpoint_to_player_id(ip).(Player_Id)
+		if !ok do continue
 
-		}
-
-		if id == 0 do continue
-
-		player_id := Player_Id(id)
 		sockets[player_id] = client_socket
 
 		if !is_event do continue
+
+		if len(ctx.players) == 0 {
+			ctx.player_active = player_id
+		}
 
 		if player_id not_in ctx.players {
 			player := Player {
@@ -109,6 +105,20 @@ listen_state :: proc(raw_ptr: rawptr) {
 	)
 }
 
+endpoint_to_player_id :: proc(endpoint: net.Endpoint) -> Maybe(Player_Id) {
+	switch addr in endpoint.address {
+	case net.IP4_Address:
+		id: u32
+		for i in 0 ..< 4 {
+			id += u32(addr[i]) << uint(i * 8)
+		}
+		return Player_Id(id)
+	case net.IP6_Address:
+		return nil
+	}
+	return nil
+}
+
 server_start :: proc(ctx: ^Server_Context) {
 	thread.create_and_start_with_data(ctx, listen_event)
 	thread.create_and_start_with_data(ctx, listen_state)
@@ -118,25 +128,24 @@ server_start :: proc(ctx: ^Server_Context) {
 game_loop :: proc(raw_ptr: rawptr) {
 	ctx := (^Server_Context)(raw_ptr)
 
-	// active_player_id: int // TODO: fix
-
 	for true {
 		if len(ctx.message_queue.queue) == 0 do continue
 
 		msg := pop(&ctx.message_queue.queue)
 
-		//TODO: if msg.id != active_player_id do continue
+		if msg.id != ctx.player_active do continue
 
 		game_update_from_message(ctx, msg)
 
 		for player_id, socket in ctx.sockets_state {
-			hand := ctx.players[Player_Id(player_id)].hand
+			hand := ctx.players[player_id].hand
 			send_package(
 				socket,
 				Server_To_Client {
 					client_game_state = Client_Game_State {
 						world = ctx.world,
 						hand = hand,
+						player_active = player_id == ctx.player_active,
 					},
 				},
 			)
@@ -158,6 +167,14 @@ game_update_from_message :: proc(
 	if is_end_turn {
 		for len(player.hand.cards) < CARDS_MAX {
 			hand_draw_from_deck(&player.hand, &player.deck)
+		}
+
+		players, _ := slice.map_keys(ctx.players)
+		player_idx, found := slice.linear_search(players, msg.id)
+
+		if found {
+			player_next_idx := (player_idx + 1) % len(players)
+			ctx.player_active = players[player_next_idx]
 		}
 	}
 
