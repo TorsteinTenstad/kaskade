@@ -39,6 +39,16 @@ _main_step :: proc(ctx: ^Client_Context) {
 	camera := &ctx.graphics.camera
 	camera_step(camera, &ctx.game_state.world)
 
+	// Entities
+	active_entity, has_active_entity := world_get_entity(
+		&ctx.game_state.world,
+		ctx.active_entity_id,
+	).(^Entity)
+
+	if has_active_entity {
+		entity_step(ctx, active_entity)
+	}
+
 	// Hand
 	hand_step_player(ctx)
 	hand_step(ctx)

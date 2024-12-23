@@ -165,13 +165,20 @@ game_update_from_message :: proc(
 
 	_, is_end_turn := msg.content.end_turn.(End_Turn)
 	if is_end_turn {
+		// Draw cards
 		for len(player.hand.cards) < CARDS_MAX {
 			hand_draw_from_deck(&player.hand, &player.deck)
 		}
 
+		// Move pieces
+		// TODO: decide piece order
+		for &entity in ctx.world.entities {
+			entity_run_action(&ctx.world, &entity)
+		}
+
+		// Activate next player
 		players, _ := slice.map_keys(ctx.players)
 		player_idx, found := slice.linear_search(players, msg.id)
-
 		if found {
 			player_next_idx := (player_idx + 1) % len(players)
 			ctx.player_active = players[player_next_idx]

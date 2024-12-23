@@ -5,11 +5,12 @@ import "core:net"
 import "core:slice"
 
 Client_Context :: struct {
-	game_state:    Client_Game_State,
-	physical_hand: Physical_Hand,
-	graphics:      Graphics,
-	socket_event:  net.TCP_Socket,
-	socket_state:  net.TCP_Socket,
+	game_state:       Client_Game_State,
+	physical_hand:    Physical_Hand,
+	graphics:         Graphics,
+	socket_event:     net.TCP_Socket,
+	socket_state:     net.TCP_Socket,
+	active_entity_id: int,
 }
 
 Client_To_Server :: struct {
@@ -54,10 +55,14 @@ recv_state_from_server :: proc(ctx_raw_ptr: rawptr) {
 		content: Server_To_Client
 
 		if !recv_package(ctx.socket_state, &content) do continue
+
 		client_game_state, ok := content.client_game_state.(Client_Game_State)
 		assert(ok, "non-exhaustive")
 
 		ctx.game_state = client_game_state
+		if len(ctx.game_state.world.entities) > 0 {
+			ctx.active_entity_id = ctx.game_state.world.entities[0].id
+		}
 
 		cards_prev := slice.mapper(
 			ctx.physical_hand.cards[:],

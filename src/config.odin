@@ -28,4 +28,4 @@ FONT_DEFAULT :: Font_Id.lilita_one_regular
 
 SERVER_PORT_EVENT :: 16143
 SERVER_PORT_STATE :: 16144
-SERVER_ADDR :: net.IP4_Address{192, 168, 81, 23}
+SERVER_ADDR :: net.IP4_Address{192, 168, 1, 113}
