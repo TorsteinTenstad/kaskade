@@ -6,10 +6,10 @@ import "core:thread"
 Player_Id :: distinct u64 //uuid
 
 Server_Game_State :: struct {
-	world:            World,
-	is_white_to_play: bool,
-	white:            Player,
-	black:            Player,
+	world:        World,
+	active_color: Piece_Color,
+	white:        Player,
+	black:        Player,
 }
 
 Server_Context :: struct {
@@ -86,7 +86,7 @@ listen_tcp :: proc(
 game_start :: proc(ctx: ^Server_Context) {
 
 	game_state := Server_Game_State {
-		is_white_to_play = true,
+		active_color = Piece_Color.white,
 	}
 	log_magenta("Starting game with players", ctx.sockets_event)
 	for player_id, _ in ctx.sockets_event {
@@ -180,11 +180,11 @@ game_state_send :: proc(ctx: ^Server_Context, player_id: Player_Id) {
 	hand: Hand
 	if player_id == game_state.white.id {
 		hand = game_state.white.hand
-		player_active = game_state.is_white_to_play
+		player_active = game_state.active_color == Piece_Color.white
 	}
 	if player_id == game_state.black.id {
 		hand = game_state.black.hand
-		player_active = !game_state.is_white_to_play
+		player_active = game_state.active_color == Piece_Color.black
 	}
 
 	send_package(
@@ -206,10 +206,12 @@ game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 
 	player: ^Player
 
-	if msg.player_id == game_state.white.id && game_state.is_white_to_play {
+	if msg.player_id == game_state.white.id &&
+	   game_state.active_color == Piece_Color.white {
 		player = &game_state.white
 	}
-	if msg.player_id == game_state.black.id && !game_state.is_white_to_play {
+	if msg.player_id == game_state.black.id &&
+	   game_state.active_color == Piece_Color.black {
 		player = &game_state.black
 	}
 	if player == nil {
@@ -240,12 +242,13 @@ game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 		}
 
 		// Activate next player
-		game_state.is_white_to_play = !game_state.is_white_to_play
-		if game_state.is_white_to_play {
-			log_magenta("White to play")
+		if game_state.active_color == Piece_Color.black {
+			game_state.active_color = Piece_Color.white
 		} else {
-			log_magenta("Black to play")
+			game_state.active_color = Piece_Color.black
 		}
+
+		log_magenta(game_state.active_color, "to play")
 	}
 
 	_, is_deck := msg.deck.(Deck)

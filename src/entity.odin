@@ -12,23 +12,38 @@ Action_Id :: enum {
 	king,
 }
 
+Piece_Color :: enum {
+	black,
+	white,
+}
+
+Entity :: struct {
+	id:            int,
+	action_id:     Action_Id,
+	position:      IVec2,
+	draw_position: FVec2,
+	sprite_id:     Sprite_Id,
+	capturing:     bool,
+	color:         Piece_Color,
+}
+
 entity_try_move_to :: proc(
 	world: ^World,
 	entity: ^Entity,
-	new_pos: IVec2,
+	target: IVec2,
 ) -> bool {
-	other_entity, occupied := world_get_entity(world, new_pos).(^Entity)
+	other_entity, occupied := world_get_entity(world, target).(^Entity)
 	if occupied {
 		if entity.capturing {
 			world_remove_entity(world, other_entity)
 			log_magenta(entity.id, "captured", other_entity.id)
-			entity.position = new_pos
+			entity.position = target
 			return true
 		} else {
 			return false
 		}
 	} else {
-		entity.position = new_pos
+		entity.position = target
 		return true
 	}
 }
@@ -85,15 +100,6 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 	case .king:
 		entity_try_move_to(world, entity, entity.position + IVec2{0, -1})
 	}
-}
-
-Entity :: struct {
-	id:            int,
-	action_id:     Action_Id,
-	position:      IVec2,
-	draw_position: FVec2,
-	sprite_id:     Sprite_Id,
-	capturing:     bool,
 }
 
 entity_step :: proc(ctx: ^Client_Context, entity: ^Entity) {
