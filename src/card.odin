@@ -6,6 +6,11 @@ import rl "vendor:raylib"
 
 Card_Id :: enum {
 	pawn,
+	knight,
+	bishop,
+	rook,
+	queen,
+	king,
 	haste,
 	obduction,
 }
@@ -80,7 +85,87 @@ card_get :: proc(card_id: Card_Id) -> Card {
 					world,
 					Entity {
 						action_id = .pawn,
-						sprite_id = .skeleton,
+						sprite_id = .pawn,
+						position = position,
+					},
+				)
+				return true
+			},
+		}
+	case .knight:
+		return Card {
+			name = "Knight",
+			description = "TODO: description",
+			play = proc(world: ^World, position: IVec2) -> bool {
+				world_add_entity(
+					world,
+					Entity {
+						action_id = .knight,
+						sprite_id = .knight,
+						position = position,
+					},
+				)
+				return true
+			},
+		}
+	case .bishop:
+		return Card {
+			name = "Bishop",
+			description = "TODO: description",
+			play = proc(world: ^World, position: IVec2) -> bool {
+				world_add_entity(
+					world,
+					Entity {
+						action_id = .bishop,
+						sprite_id = .bishop,
+						position = position,
+					},
+				)
+				return true
+			},
+		}
+	case .rook:
+		return Card {
+			name = "Rook",
+			description = "TODO: description",
+			play = proc(world: ^World, position: IVec2) -> bool {
+				world_add_entity(
+					world,
+					Entity {
+						action_id = .rook,
+						sprite_id = .rook,
+						position = position,
+					},
+				)
+				return true
+			},
+		}
+	case .queen:
+		return Card {
+			name = "Queen",
+			description = "TODO: description",
+			play = proc(world: ^World, position: IVec2) -> bool {
+				world_add_entity(
+					world,
+					Entity {
+						action_id = .queen,
+						sprite_id = .queen,
+						position = position,
+					},
+				)
+				return true
+			},
+		}
+	case .king:
+		return Card {
+			name = "King",
+			description = "TODO: description",
+			play = proc(world: ^World, position: IVec2) -> bool {
+				world_add_entity(
+					world,
+					Entity {
+						action_id = .king,
+						sprite_id = .king,
 						position = position,
 					},
 				)

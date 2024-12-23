@@ -5,12 +5,22 @@ import rl "vendor:raylib"
 
 Action_Id :: enum {
 	pawn,
+	knight,
+	bishop,
+	rook,
+	queen,
+	king,
 }
 
 entity_run_action :: proc(world: ^World, entity: ^Entity) {
 	switch entity.action_id {
 	case .pawn:
 		entity.draw_position.y -= 1
+	case .knight:
+	case .bishop:
+	case .rook:
+	case .queen:
+	case .king:
 	}
 }
 

@@ -16,11 +16,23 @@ Graphics :: struct {
 Sprite_Id :: enum {
 	player,
 	skeleton,
+	pawn,
+	knight,
+	bishop,
+	rook,
+	queen,
+	king,
 }
 
 Sprite_Paths := [Sprite_Id]string {
 	.player   = "player.png",
 	.skeleton = "skeleton.png",
+	.pawn     = "pawn.png",
+	.knight   = "knight.png",
+	.bishop   = "bishop.png",
+	.rook     = "rook.png",
+	.queen    = "queen.png",
+	.king     = "king.png",
 }
 
 Font_Id :: enum {
