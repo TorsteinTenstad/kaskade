@@ -8,8 +8,8 @@ Player_Id :: distinct u32
 Server_Context :: struct {
 	world:         World,
 	players:       map[Player_Id]Player,
-	socket_event:  map[Player_Id]net.TCP_Socket,
-	socket_state:  map[Player_Id]net.TCP_Socket,
+	sockets_event: map[Player_Id]net.TCP_Socket,
+	sockets_state: map[Player_Id]net.TCP_Socket,
 	message_queue: Message_Queue(Client_To_Server),
 }
 
@@ -47,6 +47,7 @@ listen_tcp :: proc(
 	for true {
 		client_socket, ip, accept_err := net.accept_tcp(socket_state)
 		assert(accept_err == nil, format(accept_err))
+
 		id: u32
 		switch addr in ip.address {
 		case net.IP4_Address:
@@ -62,6 +63,9 @@ listen_tcp :: proc(
 
 		player_id := Player_Id(id)
 		sockets[player_id] = client_socket
+
+		if !is_event do continue
+
 		if player_id not_in ctx.players {
 			player := Player {
 				deck = random_deck(),
@@ -72,14 +76,12 @@ listen_tcp :: proc(
 			ctx.players[player_id] = player
 		}
 
-		if !is_event do continue
+		params := new(Handle_Client_Params)
+		params.player_id = player_id
+		params.message_queue = &ctx.message_queue
+		params.socket = client_socket
 
-		params := Handle_Client_Params {
-			player_id     = player_id,
-			message_queue = &ctx.message_queue,
-			socket        = client_socket,
-		}
-		thread.create_and_start_with_data(&params, proc(raw_ptr: rawptr) {
+		thread.create_and_start_with_data(params, proc(raw_ptr: rawptr) {
 			params_ptr := (^Handle_Client_Params)(raw_ptr)
 			handle_client(params_ptr)
 			free(params_ptr)
@@ -91,9 +93,9 @@ listen_event :: proc(raw_ptr: rawptr) {
 	ctx := (^Server_Context)(raw_ptr)
 	listen_tcp(
 		ctx,
-		&ctx.socket_event,
+		&ctx.sockets_event,
 		net.Endpoint{port = SERVER_PORT_EVENT, address = SERVER_ADDR},
-		true,
+		is_event = true,
 	)
 }
 
@@ -101,9 +103,9 @@ listen_state :: proc(raw_ptr: rawptr) {
 	ctx := (^Server_Context)(raw_ptr)
 	listen_tcp(
 		ctx,
-		&ctx.socket_state,
+		&ctx.sockets_state,
 		net.Endpoint{port = SERVER_PORT_STATE, address = SERVER_ADDR},
-		false,
+		is_event = false,
 	)
 }
 
@@ -127,7 +129,7 @@ game_loop :: proc(raw_ptr: rawptr) {
 
 		game_update_from_message(ctx, msg)
 
-		for player_id, socket in ctx.socket_state {
+		for player_id, socket in ctx.sockets_state {
 			hand := ctx.players[Player_Id(player_id)].hand
 			send_package(
 				socket,
@@ -185,15 +187,14 @@ handle_client :: proc(params: ^Handle_Client_Params) {
 
 	for true {
 		content: Client_To_Server
-		if recv_package(params.socket, &content) {
-			msg := Message(Client_To_Server) {
-				id      = params.player_id,
-				content = content,
-			}
-			append(&params.message_queue.queue, msg) // TODO: not thread safe!
-		} else {
-			break
+		if !recv_package(params.socket, &content) do continue
+
+		print("Got message!")
+		msg := Message(Client_To_Server) {
+			id      = params.player_id,
+			content = content,
 		}
+		append(&params.message_queue.queue, msg) // TODO: not thread safe!
 	}
 
 	print("Goodbye client!", params.socket)
