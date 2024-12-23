@@ -209,19 +209,16 @@ deck_shuffle :: proc(deck: ^Deck) {
 
 random_deck :: proc() -> Deck {
 	deck: Deck
-	append(&deck.cards, Card_Id.haste)
-	append(&deck.cards, Card_Id.haste)
-	append(&deck.cards, Card_Id.pawn)
-	append(&deck.cards, Card_Id.haste)
-	append(&deck.cards, Card_Id.pawn)
-	append(&deck.cards, Card_Id.obduction)
-	append(&deck.cards, Card_Id.haste)
-	append(&deck.cards, Card_Id.pawn)
-	append(&deck.cards, Card_Id.haste)
-	append(&deck.cards, Card_Id.obduction)
-	append(&deck.cards, Card_Id.obduction)
-	append(&deck.cards, Card_Id.pawn)
-	append(&deck.cards, Card_Id.obduction)
-	append(&deck.cards, Card_Id.pawn)
+
+	for _ in 0 ..< 5 {
+		for card_id in Card_Id {
+			if rand.int_max(2) > 0 {
+				append(&deck.cards, card_id)
+			}
+		}
+	}
+
+	deck_shuffle(&deck)
+
 	return deck
 }
