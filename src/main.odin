@@ -53,16 +53,22 @@ _main_step :: proc(ctx: ^Client_Context) {
 		entity_step(ctx, active_entity)
 	}
 
-	// Hand
-	hand_step_player(ctx)
+	// Hand and input
 	hand_step(ctx)
 
-	// Input
-	if rl.IsKeyPressed(.ENTER) {
-		send_package(
-			ctx.socket_event,
-			Client_To_Server{player_id = ctx.player_id, end_turn = End_Turn{}},
-		)
+	if (ctx.game_state.active_color == ctx.game_state.player_color) {
+		hand_step_player(ctx)
+
+		// Input
+		if rl.IsKeyPressed(.ENTER) {
+			send_package(
+				ctx.socket_event,
+				Client_To_Server {
+					player_id = ctx.player_id,
+					end_turn = End_Turn{},
+				},
+			)
+		}
 	}
 }
 
