@@ -133,7 +133,10 @@ game_loop :: proc(raw_ptr: rawptr) {
 
 		msg := pop(&ctx.message_queue.queue)
 
-		if msg.id != ctx.player_active do continue
+		if msg.id != ctx.player_active {
+			log_red("You", msg.id, "are not active", ctx.player_active)
+			continue
+		}
 
 		game_update_from_message(ctx, msg)
 
@@ -162,6 +165,10 @@ game_update_from_message :: proc(
 		return
 	}
 	player := &ctx.players[msg.id]
+
+	for &entity in ctx.world.entities {
+		entity.draw_position = f_vec_2(entity.position)
+	}
 
 	_, is_end_turn := msg.content.end_turn.(End_Turn)
 	if is_end_turn {

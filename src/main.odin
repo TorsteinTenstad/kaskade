@@ -35,6 +35,9 @@ main :: proc() {
 
 @(private = "file")
 _main_step :: proc(ctx: ^Client_Context) {
+	// Update game_state
+	game_state_apply_incoming(ctx)
+
 	// Camera
 	camera := &ctx.graphics.camera
 	camera_step(camera, &ctx.game_state.world)

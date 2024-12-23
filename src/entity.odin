@@ -13,8 +13,6 @@ Action_Id :: enum {
 }
 
 entity_run_action :: proc(world: ^World, entity: ^Entity) {
-	entity.draw_position = f_vec_2(entity.position)
-
 	switch entity.action_id {
 	case .pawn:
 		entity.position.y -= 1

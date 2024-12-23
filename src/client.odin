@@ -3,14 +3,17 @@ package main
 
 import "core:net"
 import "core:slice"
+import "core:sync"
 
 Client_Context :: struct {
-	game_state:       Client_Game_State,
-	physical_hand:    Physical_Hand,
-	graphics:         Graphics,
-	socket_event:     net.TCP_Socket,
-	socket_state:     net.TCP_Socket,
-	active_entity_id: int,
+	game_state:                Client_Game_State,
+	game_state_incoming:       Maybe(Client_Game_State),
+	game_state_incoming_mutex: sync.Recursive_Mutex,
+	physical_hand:             Physical_Hand,
+	graphics:                  Graphics,
+	socket_event:              net.TCP_Socket,
+	socket_state:              net.TCP_Socket,
+	active_entity_id:          int,
 }
 
 Client_To_Server :: struct {
@@ -56,34 +59,50 @@ recv_state_from_server :: proc(ctx_raw_ptr: rawptr) {
 
 		if !recv_package(ctx.socket_state, &content) do continue
 
-		client_game_state, ok := content.client_game_state.(Client_Game_State)
+		game_state_incoming, ok := content.client_game_state.(Client_Game_State)
 		assert(ok, "non-exhaustive")
 
-		ctx.game_state = client_game_state
-		if len(ctx.game_state.world.entities) > 0 {
-			ctx.active_entity_id = ctx.game_state.world.entities[0].id
+		sync.recursive_mutex_lock(&ctx.game_state_incoming_mutex)
+		ctx.game_state_incoming = game_state_incoming
+		sync.recursive_mutex_unlock(&ctx.game_state_incoming_mutex)
+	}
+}
+
+game_state_apply_incoming :: proc(ctx: ^Client_Context) {
+	locked := sync.recursive_mutex_try_lock(&ctx.game_state_incoming_mutex)
+	defer sync.recursive_mutex_unlock(&ctx.game_state_incoming_mutex)
+
+	if !locked do return
+
+	game_state_incoming, ok := ctx.game_state_incoming.(Client_Game_State)
+	if !ok do return
+
+	ctx.game_state = game_state_incoming
+	ctx.game_state_incoming = nil
+
+	if len(ctx.game_state.world.entities) > 0 {
+		ctx.active_entity_id = ctx.game_state.world.entities[0].id
+	}
+
+	cards_prev := slice.mapper(
+		ctx.physical_hand.cards[:],
+		proc(card: Physical_Card) -> Card_Id {return card.card.id},
+	)
+	defer delete(cards_prev)
+
+	if !slice.equal(cards_prev, ctx.game_state.hand.cards[:]) {
+		clear(&ctx.physical_hand.cards)
+
+		for card_id in ctx.game_state.hand.cards {
+			append(
+				&ctx.physical_hand.cards,
+				Physical_Card{card = card_get(card_id)},
+			)
 		}
+		ctx.physical_hand.hover_index = nil
+		ctx.physical_hand.hover_is_selected = false
+		ctx.physical_hand.hover_target = nil
 
-		cards_prev := slice.mapper(
-			ctx.physical_hand.cards[:],
-			proc(card: Physical_Card) -> Card_Id {return card.card.id},
-		)
-		defer delete(cards_prev)
-
-		if !slice.equal(cards_prev, client_game_state.hand.cards[:]) {
-			clear(&ctx.physical_hand.cards)
-
-			for card_id in client_game_state.hand.cards {
-				append(
-					&ctx.physical_hand.cards,
-					Physical_Card{card = card_get(card_id)},
-				)
-			}
-			ctx.physical_hand.hover_index = nil
-			ctx.physical_hand.hover_is_selected = false
-			ctx.physical_hand.hover_target = nil
-
-			// TODO: Fix animations
-		}
+		// TODO: Fix animations
 	}
 }
