@@ -177,11 +177,17 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			name = "Obduction",
 			description = "Remove all pieces in a 3x3 square.",
 			play = proc(world: ^World, position: IVec2) -> bool {
+				death_note := make([dynamic]int)
+				defer delete(death_note)
+
 				for &entity in world.entities {
 					distance_vec := position - entity.position
-					if (abs(distance_vec.x) <= 1 && abs(distance_vec.y) <= 1) {
-						world_remove_entity(world, &entity)
+					if abs(distance_vec.x) <= 1 && abs(distance_vec.y) <= 1 {
+						append(&death_note, entity.id)
 					}
+				}
+				for entity_id in death_note {
+					world_remove_entity(world, entity_id)
 				}
 				return true
 			},

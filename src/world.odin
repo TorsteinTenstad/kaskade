@@ -15,13 +15,24 @@ world_add_entity :: proc(world: ^World, entity: Entity) -> int {
 	return entity.id
 }
 
-world_remove_entity :: proc(world: ^World, entity: ^Entity) -> bool {
-	index := world_get_entity_index(world, entity.id)
+_world_remove_entity_from_struct :: proc(
+	world: ^World,
+	entity: ^Entity,
+) -> bool {
+	return world_remove_entity(world, entity.id)
+}
+
+_world_remove_entity_from_id :: proc(world: ^World, entity_id: int) -> bool {
+	index := world_get_entity_index(world, entity_id)
 	if index < 0 do return false
 	unordered_remove(&world.entities, index)
 	return true
 }
 
+world_remove_entity :: proc {
+	_world_remove_entity_from_struct,
+	_world_remove_entity_from_id,
+}
 
 @(private = "file")
 _world_get_entity_from_position :: proc(
