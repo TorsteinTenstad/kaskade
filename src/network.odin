@@ -6,10 +6,12 @@ import "core:mem"
 import "core:net"
 
 
-send_package :: proc(socket: net.TCP_Socket, msg: $T) {
+send_package :: proc(socket: net.TCP_Socket, msg: $T) -> bool {
 	buf, json_err := json.marshal(msg)
-
-	assert(json_err == nil, format(json_err))
+	if json_err != nil {
+		log_red(json_err)
+		return false
+	}
 
 	size: u64 = transmute(u64)len(buf)
 	size_bytes := mem.byte_slice(&size, 8)
@@ -18,14 +20,27 @@ send_package :: proc(socket: net.TCP_Socket, msg: $T) {
 	tcp_err: net.Network_Error
 
 	sent_bytes, tcp_err = net.send_tcp(socket, size_bytes)
-	assert(tcp_err == nil, format(tcp_err))
-	assert(sent_bytes == 8, format(sent_bytes))
+	if tcp_err != nil {
+		log_red(tcp_err)
+		return false
+	}
+	if sent_bytes != 8 {
+		log_red("Expected to send", 8, "bytes. Sent", sent_bytes)
+		return false
+	}
 
 	sent_bytes, tcp_err = net.send_tcp(socket, buf)
-	assert(tcp_err == nil, format(tcp_err))
-	assert(sent_bytes == int(size), format(sent_bytes))
+	if tcp_err != nil {
+		log_red(tcp_err)
+		return false
+	}
+	if u64(sent_bytes) != size {
+		log_red("Expected to send", size, "bytes. Sent", sent_bytes)
+		return false
+	}
 
-	print("Sent", string(buf))
+	log_blue(string(buf))
+	return true
 }
 
 recv_package :: proc(socket: net.TCP_Socket, msg: $T) -> bool {
@@ -34,7 +49,15 @@ recv_package :: proc(socket: net.TCP_Socket, msg: $T) -> bool {
 
 	(size_bytes_read != 0) or_return
 
-	(recv_size_err == nil && size_bytes_read == 8) or_return
+	if recv_size_err != nil {
+		log_red(recv_size_err)
+		return false
+	}
+
+	if size_bytes_read != 8 {
+		log_red("Expected to receive", 8, "bytes. Received", size_bytes_read)
+		return false
+	}
 
 	size := int(transmute(u64)(size_bytes))
 
@@ -42,11 +65,21 @@ recv_package :: proc(socket: net.TCP_Socket, msg: $T) -> bool {
 	defer delete(buf)
 	msg_bytes_read, recv_buf_error := net.recv_tcp(socket, buf)
 
-	(recv_buf_error == nil && msg_bytes_read == size) or_return
+	if recv_buf_error != nil {
+		log_red(recv_buf_error)
+		return false
+	}
 
-	json.unmarshal(buf, msg)
+	if (msg_bytes_read != size) {
+		log_red("Expected to receive", size, "bytes. Received", msg_bytes_read)
+	}
 
-	print("Recv'd!")
+	unmarshal_err := json.unmarshal(buf, msg)
+	if unmarshal_err != nil {
+		log_red(unmarshal_err, "when unmarshaling", string(buf))
+	}
+
+	log_green(string(buf))
 
 	return true
 }

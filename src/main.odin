@@ -16,7 +16,6 @@ get_context :: proc() -> ^Client_Context {
 main :: proc() {
 
 	rl.SetTraceLogLevel(rl.TraceLogLevel.NONE)
-
 	// Server
 	ctx: Server_Context
 	server_start(&ctx)

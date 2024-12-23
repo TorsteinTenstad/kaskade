@@ -158,7 +158,7 @@ game_update_from_message :: proc(
 	msg: Message(Client_To_Server),
 ) {
 	if msg.id not_in ctx.players {
-		print("Player not found", msg.id)
+		log_red("Player not found", msg.id)
 		return
 	}
 	player := &ctx.players[msg.id]
@@ -200,20 +200,22 @@ Handle_Client_Params :: struct {
 }
 
 handle_client :: proc(params: ^Handle_Client_Params) {
-	print("Hello client!", params.socket)
+	log_yellow(
+		"Player",
+		params.player_id,
+		"Connected on socket",
+		params.socket,
+	)
 
 	for true {
 		content: Client_To_Server
 		if !recv_package(params.socket, &content) do continue
-
-		print("Got message!")
 		msg := Message(Client_To_Server) {
 			id      = params.player_id,
 			content = content,
 		}
 		append(&params.message_queue.queue, msg) // TODO: not thread safe!
 	}
-
-	print("Goodbye client!", params.socket)
+	log_yellow("Player", params.player_id, "disconnected")
 	net.close(params.socket)
 }

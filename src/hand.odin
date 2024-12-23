@@ -163,7 +163,7 @@ hand_draw_from_deck :: proc(hand: ^Hand, deck: ^Deck) -> bool {
 	if len(deck.cards) == 0 do return false
 
 	card := pop(&deck.cards)
-	print("Drew card", card)
+	log_magenta("Drew card", card)
 	append(&hand.cards, card)
 	return true
 }
