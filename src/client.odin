@@ -1,11 +1,13 @@
 #+vet unused shadowing using-stmt style semicolon
 package main
 
+import "core:math/rand"
 import "core:net"
 import "core:slice"
 import "core:sync"
 
 Client_Context :: struct {
+	player_id:                 Player_Id,
 	game_state:                Client_Game_State,
 	game_state_incoming:       Maybe(Client_Game_State),
 	game_state_incoming_mutex: sync.Recursive_Mutex,
@@ -17,6 +19,7 @@ Client_Context :: struct {
 }
 
 Client_To_Server :: struct {
+	player_id:   Player_Id,
 	deck:        Maybe(Deck),
 	card_action: Maybe(Card_Action),
 	end_turn:    Maybe(End_Turn),
@@ -32,20 +35,25 @@ End_Turn :: struct {}
 client_context_create :: proc() -> Client_Context {
 	ctx := Client_Context{}
 
+	ctx.player_id = Player_Id(rand.uint64())
+
 	socket_event, socket_event_err := net.dial_tcp(
 		net.Endpoint{address = SERVER_ADDR, port = SERVER_PORT_EVENT},
 	)
 	assert(socket_event_err == nil, format(socket_event_err))
+	send_package(socket_event, Client_To_Server{player_id = ctx.player_id})
 	ctx.socket_event = socket_event
 
 	socket_state, socket_state_err := net.dial_tcp(
 		net.Endpoint{address = SERVER_ADDR, port = SERVER_PORT_STATE},
 	)
 	assert(socket_state_err == nil, format(socket_state_err))
+	send_package(socket_state, Client_To_Server{player_id = ctx.player_id})
 	ctx.socket_state = socket_state
 
 	init_msg := Client_To_Server {
-		deck = random_deck(),
+		player_id = ctx.player_id,
+		deck      = random_deck(),
 	}
 	send_package(socket_event, init_msg)
 

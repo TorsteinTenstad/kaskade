@@ -148,6 +148,7 @@ hand_play :: proc(
 	if index >= len(ctx.physical_hand.cards) do return false
 
 	msg: Client_To_Server = Client_To_Server {
+		player_id = ctx.player_id,
 		card_action = Card_Action{card_idx = index, target = position},
 	}
 	send_package(ctx.socket_event, msg)
@@ -161,7 +162,6 @@ hand_draw_from_deck :: proc(hand: ^Hand, deck: ^Deck) -> bool {
 	if len(deck.cards) == 0 do return false
 
 	card := pop(&deck.cards)
-	log_magenta("Drew card", card)
 	append(&hand.cards, card)
 	return true
 }

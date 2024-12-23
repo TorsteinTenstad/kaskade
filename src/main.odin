@@ -1,7 +1,10 @@
 #+vet unused shadowing using-stmt style semicolon
 package main
 
+import "core:math/rand"
+import "core:net"
 import "core:thread"
+import "core:time"
 import rl "vendor:raylib"
 
 @(private = "file")
@@ -12,6 +15,39 @@ get_context :: proc() -> ^Client_Context {
 	return &_client_context
 }
 
+run_ai :: proc() {
+	player_id := (Player_Id)(rand.uint64())
+	event_endpoint := net.Endpoint {
+		address = SERVER_ADDR,
+		port    = SERVER_PORT_EVENT,
+	}
+	socket_event, socket_event_err := net.dial_tcp(event_endpoint)
+	send_package(socket_event, Client_To_Server{player_id = player_id})
+	assert(socket_event_err == nil, format(socket_event_err))
+	state_endpoint := net.Endpoint {
+		address = SERVER_ADDR,
+		port    = SERVER_PORT_STATE,
+	}
+	socket_state, socket_state_err := net.dial_tcp(state_endpoint)
+	send_package(socket_event, Client_To_Server{player_id = player_id})
+	assert(socket_state_err == nil, format(socket_state_err))
+
+	time.sleep(time.Second)
+
+	send_package(
+		socket_event,
+		Client_To_Server{player_id = player_id, deck = random_deck()},
+	)
+
+	server_to_client: Server_To_Client
+	for true {
+		recv_ok := recv_package(socket_state, &server_to_client)
+		if !recv_ok {
+			log_red("AI failed to receive state from server")
+			continue}
+		log_magenta("AI received state from server")
+	}
+}
 
 main :: proc() {
 
@@ -19,6 +55,8 @@ main :: proc() {
 	// Server
 	ctx: Server_Context
 	server_start(&ctx)
+
+	thread.create_and_start(run_ai)
 
 	// Client
 	_client_context = client_context_create()
