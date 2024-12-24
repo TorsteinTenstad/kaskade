@@ -180,10 +180,8 @@ game_loop :: proc(raw_ptr: rawptr) {
 	}
 }
 
-game_state_send :: proc(ctx: ^Server_Context, player_id: Player_Id) {
-	game_state, ok := &ctx.game_state.(Server_Game_State)
-
-	if !ok do return
+game_state_send :: proc(ctx: ^Server_Context, player_id: Player_Id) -> bool {
+	game_state := (&ctx.game_state.(Server_Game_State)) or_return
 
 	player: ^Player
 	if player_id == game_state.white.id {
@@ -209,14 +207,14 @@ game_state_send :: proc(ctx: ^Server_Context, player_id: Player_Id) {
 		ctx.sockets_state[player_id],
 		Server_To_Client{client_game_state = client_game_state},
 	)
+	return true
 }
 
 game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
-
 	game_state, ok := &ctx.game_state.(Server_Game_State)
-	world := &game_state.world
 	if !ok do return
 
+	world := &game_state.world
 	player: ^Player
 
 	if msg.player_id == game_state.white.id &&
@@ -255,7 +253,7 @@ game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 
 		for id in entity_ids {
 			entity := world_get_entity(world, id).(^Entity) or_continue
-			if entity.color != game_state.active_color do return
+			if entity.color != game_state.active_color do continue
 
 			entity_run_action(world, entity)
 		}

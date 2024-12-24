@@ -87,14 +87,12 @@ recv_state_from_server :: proc(ctx_raw_ptr: rawptr) {
 	}
 }
 
-game_state_apply_incoming :: proc(ctx: ^Client_Context) {
-	locked := sync.recursive_mutex_try_lock(&ctx.game_state_incoming_mutex)
+game_state_apply_incoming :: proc(ctx: ^Client_Context) -> bool {
+	sync.recursive_mutex_try_lock(&ctx.game_state_incoming_mutex) or_return
 	defer sync.recursive_mutex_unlock(&ctx.game_state_incoming_mutex)
 
-	if !locked do return
-
-	game_state_incoming, ok := ctx.game_state_incoming.(Client_Game_State)
-	if !ok do return
+	game_state_incoming :=
+		ctx.game_state_incoming.(Client_Game_State) or_return
 
 	ctx.game_state = game_state_incoming
 	ctx.game_state_incoming = nil
@@ -129,23 +127,25 @@ game_state_apply_incoming :: proc(ctx: ^Client_Context) {
 		ctx.physical_hand.hover_is_selected = false
 		ctx.physical_hand.hover_target = nil
 	}
+
+	return true
 }
 
 client_start :: proc() {
 	player_id := (Player_Id)(rand.uint64())
 
 	event_endpoint := net.Endpoint {
-		address = SERVER_ADDR,
-		port    = SERVER_PORT_EVENT,
-	}
+			address = SERVER_ADDR,
+			port    = SERVER_PORT_EVENT,
+		}
 	socket_event, socket_event_err := net.dial_tcp(event_endpoint)
 	assert(socket_event_err == nil, format(socket_event_err))
 	send_package(socket_event, Client_To_Server{player_id = player_id})
 
 	state_endpoint := net.Endpoint {
-		address = SERVER_ADDR,
-		port    = SERVER_PORT_STATE,
-	}
+			address = SERVER_ADDR,
+			port    = SERVER_PORT_STATE,
+		}
 
 	socket_state, socket_state_err := net.dial_tcp(state_endpoint)
 	assert(socket_state_err == nil, format(socket_state_err))

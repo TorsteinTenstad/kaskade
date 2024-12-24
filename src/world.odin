@@ -79,8 +79,7 @@ _world_remove_entity_from_struct :: proc(
 }
 
 _world_remove_entity_from_id :: proc(world: ^World, entity_id: int) -> bool {
-	index, found := _world_get_entity_index(world, entity_id).(int)
-	if !found do return false
+	index := _world_get_entity_index(world, entity_id).(int) or_return
 	unordered_remove(&world.entities, index)
 	return true
 }

@@ -158,7 +158,6 @@ hand_play :: proc(
 
 hand_draw_from_deck :: proc(hand: ^Hand, deck: ^Deck) -> bool {
 	if len(hand.cards) >= CARDS_MAX do return false
-
 	if len(deck.cards) == 0 do return false
 
 	card := pop(&deck.cards)
