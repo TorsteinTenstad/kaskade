@@ -261,17 +261,15 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				death_note := make([dynamic]int)
-				defer delete(death_note)
+				entity_ids := world_get_entity_ids(world)
+				defer delete(entity_ids)
 
-				for &entity in world.entities {
+				for id in entity_ids {
+					entity := world_get_entity(world, id).(^Entity) or_continue
 					distance_vec := position - entity.position
 					if abs(distance_vec.x) <= 1 && abs(distance_vec.y) <= 1 {
-						append(&death_note, entity.id)
+						world_remove_entity(world, entity.id)
 					}
-				}
-				for entity_id in death_note {
-					world_remove_entity(world, entity_id)
 				}
 				return true
 			},

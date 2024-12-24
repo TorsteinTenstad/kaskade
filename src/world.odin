@@ -41,10 +41,7 @@ player_close_to_king :: proc(
 	return false
 }
 
-player_try_place_entity :: proc(
-	world: ^World,
-	entity: Entity,
-) -> Maybe(int) {
+player_try_place_entity :: proc(world: ^World, entity: Entity) -> Maybe(int) {
 	if world_is_empty(world, entity.position) &&
 	   (player_in_spawn_zone(entity.color, entity.position) ||
 			   player_close_to_king(world, entity.color, entity.position)) {
@@ -62,6 +59,18 @@ world_add_entity :: proc(world: ^World, entity: Entity) -> int {
 	return entity.id
 }
 
+world_get_entity_ids :: proc(
+	world: ^World,
+	allocator := context.allocator,
+) -> []int {
+	size := len(world.entities)
+	ids := make([]int, size, allocator)
+	for &entity, i in world.entities {
+		ids[i] = entity.id
+	}
+	return ids
+}
+
 _world_remove_entity_from_struct :: proc(
 	world: ^World,
 	entity: ^Entity,
@@ -70,8 +79,8 @@ _world_remove_entity_from_struct :: proc(
 }
 
 _world_remove_entity_from_id :: proc(world: ^World, entity_id: int) -> bool {
-	index := world_get_entity_index(world, entity_id)
-	if index < 0 do return false
+	index, found := _world_get_entity_index(world, entity_id).(int)
+	if !found do return false
 	unordered_remove(&world.entities, index)
 	return true
 }
@@ -99,8 +108,8 @@ _world_get_entity_from_id :: proc(
 	world: ^World,
 	entity_id: int,
 ) -> Maybe(^Entity) {
-	index := world_get_entity_index(world, entity_id)
-	if index < 0 {
+	index, found := _world_get_entity_index(world, entity_id).(int)
+	if !found {
 		return nil
 	} else {
 		return &world.entities[index]
@@ -114,13 +123,14 @@ world_get_entity :: proc {
 
 // Return its index in world.entities, not its id.
 // Returns -1 if it is not found.
-world_get_entity_index :: proc(world: ^World, entity_id: int) -> int {
+@(private = "file")
+_world_get_entity_index :: proc(world: ^World, entity_id: int) -> Maybe(int) {
 	for entity, i in world.entities {
 		if entity.id == entity_id {
 			return i
 		}
 	}
-	return -1
+	return nil
 }
 
 world_is_empty :: proc(world: ^World, world_position: IVec2) -> bool {

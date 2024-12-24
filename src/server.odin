@@ -214,6 +214,7 @@ game_state_send :: proc(ctx: ^Server_Context, player_id: Player_Id) {
 game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 
 	game_state, ok := &ctx.game_state.(Server_Game_State)
+	world := &game_state.world
 	if !ok do return
 
 	player: ^Player
@@ -236,7 +237,7 @@ game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 		return
 	}
 
-	for &entity in game_state.world.entities {
+	for &entity in world.entities {
 		entity.draw_position = f_vec_2(entity.position)
 	}
 
@@ -249,10 +250,14 @@ game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
 
 		// Move pieces
 		// TODO: decide piece order
-		for &entity in game_state.world.entities {
-			if entity.color != game_state.active_color do continue
+		entity_ids := world_get_entity_ids(world)
+		defer delete(entity_ids)
 
-			entity_run_action(&game_state.world, &entity)
+		for id in entity_ids {
+			entity := world_get_entity(world, id).(^Entity) or_continue
+			if entity.color != game_state.active_color do return
+
+			entity_run_action(world, entity)
 		}
 
 		// Update max mana
