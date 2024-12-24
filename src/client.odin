@@ -37,10 +37,10 @@ Card_Action :: struct {
 
 End_Turn :: struct {}
 
-client_context_create :: proc() -> Client_Context {
+client_context_create :: proc(deck: Maybe(Deck) = nil) -> Client_Context {
 	ctx := Client_Context{}
 
-	headless_ctx := headless_client_context_create()
+	headless_ctx := headless_client_context_create(deck)
 
 	ctx.player_id = headless_ctx.player_id
 	ctx.socket_event = headless_ctx.socket_event
@@ -49,7 +49,9 @@ client_context_create :: proc() -> Client_Context {
 	return ctx
 }
 
-headless_client_context_create :: proc() -> Headless_Client_Context {
+headless_client_context_create :: proc(
+	deck: Maybe(Deck) = nil,
+) -> Headless_Client_Context {
 	ctx := Headless_Client_Context{}
 
 	ctx.player_id = Player_Id(rand.uint64())
@@ -58,7 +60,10 @@ headless_client_context_create :: proc() -> Headless_Client_Context {
 		net.Endpoint{address = SERVER_ADDR, port = SERVER_PORT_EVENT},
 	)
 	assert(socket_event_err == nil, format(socket_event_err))
-	send_package(socket_event, Client_To_Server{player_id = ctx.player_id})
+	send_package(
+		socket_event,
+		Client_To_Server{player_id = ctx.player_id, deck = deck},
+	)
 	ctx.socket_event = socket_event
 
 	socket_state, socket_state_err := net.dial_tcp(

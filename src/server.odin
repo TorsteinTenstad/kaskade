@@ -17,6 +17,7 @@ Server_Context :: struct {
 	game_state:    Maybe(Server_Game_State),
 	sockets_event: map[Player_Id]net.TCP_Socket,
 	sockets_state: map[Player_Id]net.TCP_Socket,
+	decks:         map[Player_Id]Deck,
 	message_queue: Message_Queue(Client_To_Server),
 }
 
@@ -71,6 +72,7 @@ listen_tcp :: proc(
 			game_state_send(ctx, init_msg.player_id)
 			continue
 		}
+		update_deck(ctx, init_msg)
 
 		if len(sockets) == 2 {
 			game_start(ctx)
@@ -99,6 +101,9 @@ game_start :: proc(ctx: ^Server_Context) {
 		player := Player {
 			id   = player_id,
 			deck = deck_random(),
+		}
+		if player_id in ctx.decks {
+			player.deck = ctx.decks[player_id]
 		}
 		for _ in 0 ..< CARDS_MAX {
 			hand_draw_from_deck(&player.hand, &player.deck)
@@ -145,18 +150,12 @@ listen_state :: proc(raw_ptr: rawptr) {
 	)
 }
 
-endpoint_to_player_id :: proc(endpoint: net.Endpoint) -> Maybe(Player_Id) {
-	switch addr in endpoint.address {
-	case net.IP4_Address:
-		id: u32
-		for i in 0 ..< 4 {
-			id += u32(addr[i]) << uint(i * 8)
-		}
-		return Player_Id(id)
-	case net.IP6_Address:
-		return nil
+update_deck :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
+	deck, is_deck := msg.deck.(Deck)
+	if is_deck {
+		ctx.decks[msg.player_id] = deck
+		deck_shuffle(&ctx.decks[msg.player_id])
 	}
-	return nil
 }
 
 server_start :: proc(ctx: ^Server_Context) {
@@ -212,6 +211,8 @@ game_state_send :: proc(ctx: ^Server_Context, player_id: Player_Id) {
 }
 
 game_update_from_message :: proc(ctx: ^Server_Context, msg: Client_To_Server) {
+
+	update_deck(ctx, msg)
 
 	game_state, ok := &ctx.game_state.(Server_Game_State)
 	if !ok do return

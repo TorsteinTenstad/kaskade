@@ -13,6 +13,7 @@ get_context :: proc() -> ^Client_Context {
 }
 
 main :: proc() {
+	deck := deck_load_json("data/deck.json")
 
 	rl.SetTraceLogLevel(rl.TraceLogLevel.NONE)
 	// Server
@@ -22,7 +23,7 @@ main :: proc() {
 	thread.create_and_start(ai_run)
 
 	// Client
-	_client_context = client_context_create()
+	_client_context = client_context_create(deck)
 	graphics_create(&_client_context)
 
 	thread.create_and_start_with_data(&_client_context, recv_state_from_server)

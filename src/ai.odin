@@ -5,9 +5,10 @@ import "core:math/rand"
 import "core:time"
 
 ai_run :: proc() {
+	deck := deck_load_json("data/ai_deck.json")
 	active_color: Piece_Color = nil
 
-	ctx := headless_client_context_create()
+	ctx := headless_client_context_create(deck)
 
 	server_to_client: Server_To_Client
 	for true {
