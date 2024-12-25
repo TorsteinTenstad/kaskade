@@ -1,29 +1,84 @@
 #+vet unused shadowing using-stmt style semicolon
 package main
 
+import "core:net"
+import "core:os"
 import "core:thread"
 import rl "vendor:raylib"
 
 @(private = "file")
 _client_context: Client_Context
-is_server: bool = true
 
 get_context :: proc() -> ^Client_Context {
 	return &_client_context
 }
 
+Program_Args :: struct {
+	run_server:    bool,
+	run_ai_client: bool,
+	server_ip:     net.IP4_Address,
+	deck_path:     string,
+}
+
 main :: proc() {
-	deck := deck_load_json("data/deck.json")
+	program_args: Program_Args
+	program_args.deck_path = "data/deck.json"
+	program_args.server_ip = SERVER_ADDR
+	for arg, idx in os.args[:] {
+		if arg == "-s" || arg == "--run_server" {
+			program_args.run_server = true
+		} else if arg == "-a" || arg == "--run_ai" {
+			program_args.run_ai_client = true
+		} else if arg == "-i" || arg == "--server_ip" {
+			if idx + 1 < len(os.args) {
+				addr, ok := net.parse_ip4_address(os.args[idx + 1])
+				if ok {
+					program_args.server_ip = addr
+				} else {
+					log_red("Invalid IPv4 address", os.args[idx + 1])
+				}
+			} else {
+				log_red("No IP provided after", arg)
+			}
+		} else if arg == "-d" || arg == "--deck_path" {
+			if idx + 1 < len(os.args) {
+				program_args.deck_path = os.args[idx + 1]
+			} else {
+				log_red("No path provided after", arg)
+			}
+		} else if arg == "-h" || arg == "--help" {
+			print("Usage:")
+			print("  -s, --run_server")
+			print("  -a, --run_ai")
+			print("  -i, --server_ip <IP>")
+			print("  -d, --deck_path <PATH>")
+			print("  -h, --help")
+			return
+		} else if arg[0] == '-' {
+			log_red("Unknown argument", arg)
+		}
+	}
+	log_yellow("Args:", os.args)
+	log_yellow("Parsed args:", program_args)
+	deck := deck_load_json(program_args.deck_path)
 
 	rl.SetTraceLogLevel(rl.TraceLogLevel.NONE)
 	// Server
-	ctx: Server_Context
-	server_start(&ctx)
+	if program_args.run_server {
+		ctx := Server_Context{}
+		server_start(&ctx)
+	}
 
-	thread.create_and_start(ai_run)
+	if program_args.run_ai_client {
+		thread.create_and_start_with_data(
+			&program_args.server_ip,
+			proc(server_ip: rawptr) {
+				ai_run((^net.IP4_Address)(server_ip)^)},
+		)
+	}
 
 	// Client
-	_client_context = client_context_create(deck)
+	_client_context = client_context_create(program_args.server_ip, deck)
 	graphics_create(&_client_context)
 	audio_load(&_client_context.audio)
 

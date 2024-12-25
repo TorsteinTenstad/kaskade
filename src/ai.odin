@@ -2,12 +2,13 @@
 package main
 
 import "core:math/rand"
+import "core:net"
 import "core:time"
 
-ai_run :: proc() {
+ai_run :: proc(server_ip: net.IP4_Address) {
 	deck := deck_load_json("data/ai_deck.json")
 
-	ctx := headless_client_context_create(deck)
+	ctx := headless_client_context_create(server_ip, deck)
 
 	server_to_client: Server_To_Client
 	for true {

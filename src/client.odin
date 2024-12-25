@@ -38,10 +38,13 @@ Card_Action :: struct {
 
 End_Turn :: struct {}
 
-client_context_create :: proc(deck: Maybe(Deck) = nil) -> Client_Context {
+client_context_create :: proc(
+	server_ip: net.IP4_Address,
+	deck: Maybe(Deck) = nil,
+) -> Client_Context {
 	ctx := Client_Context{}
 
-	headless_ctx := headless_client_context_create(deck)
+	headless_ctx := headless_client_context_create(server_ip, deck)
 
 	ctx.player_id = headless_ctx.player_id
 	ctx.socket_event = headless_ctx.socket_event
@@ -51,6 +54,7 @@ client_context_create :: proc(deck: Maybe(Deck) = nil) -> Client_Context {
 }
 
 headless_client_context_create :: proc(
+	server_ip: net.IP4_Address,
 	deck: Maybe(Deck) = nil,
 ) -> Headless_Client_Context {
 	ctx := Headless_Client_Context{}
@@ -58,7 +62,7 @@ headless_client_context_create :: proc(
 	ctx.player_id = Player_Id(rand.uint64())
 
 	socket_event, socket_event_err := net.dial_tcp(
-		net.Endpoint{address = SERVER_ADDR, port = SERVER_PORT_EVENT},
+		net.Endpoint{address = server_ip, port = SERVER_PORT_EVENT},
 	)
 	assert(socket_event_err == nil, format(socket_event_err))
 	send_package(
@@ -68,7 +72,7 @@ headless_client_context_create :: proc(
 	ctx.socket_event = socket_event
 
 	socket_state, socket_state_err := net.dial_tcp(
-		net.Endpoint{address = SERVER_ADDR, port = SERVER_PORT_STATE},
+		net.Endpoint{address = server_ip, port = SERVER_PORT_STATE},
 	)
 	assert(socket_state_err == nil, format(socket_state_err))
 	send_package(socket_state, Client_To_Server{player_id = ctx.player_id})
@@ -135,25 +139,4 @@ game_state_apply_incoming :: proc(ctx: ^Client_Context) -> bool {
 	}
 
 	return true
-}
-
-client_start :: proc() {
-	player_id := (Player_Id)(rand.uint64())
-
-	event_endpoint := net.Endpoint {
-			address = SERVER_ADDR,
-			port    = SERVER_PORT_EVENT,
-		}
-	socket_event, socket_event_err := net.dial_tcp(event_endpoint)
-	assert(socket_event_err == nil, format(socket_event_err))
-	send_package(socket_event, Client_To_Server{player_id = player_id})
-
-	state_endpoint := net.Endpoint {
-			address = SERVER_ADDR,
-			port    = SERVER_PORT_STATE,
-		}
-
-	socket_state, socket_state_err := net.dial_tcp(state_endpoint)
-	assert(socket_state_err == nil, format(socket_state_err))
-	send_package(socket_state, Client_To_Server{player_id = player_id})
 }

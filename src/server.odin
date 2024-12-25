@@ -14,6 +14,7 @@ Server_Game_State :: struct {
 }
 
 Server_Context :: struct {
+	server_ip:     net.IP4_Address,
 	game_state:    Maybe(Server_Game_State),
 	sockets_event: map[Player_Id]net.TCP_Socket,
 	sockets_state: map[Player_Id]net.TCP_Socket,
@@ -135,7 +136,7 @@ listen_event :: proc(raw_ptr: rawptr) {
 	listen_tcp(
 		ctx,
 		&ctx.sockets_event,
-		net.Endpoint{port = SERVER_PORT_EVENT, address = SERVER_ADDR},
+		net.Endpoint{port = SERVER_PORT_EVENT, address = ctx.server_ip},
 		is_event = true,
 	)
 }
@@ -145,7 +146,7 @@ listen_state :: proc(raw_ptr: rawptr) {
 	listen_tcp(
 		ctx,
 		&ctx.sockets_state,
-		net.Endpoint{port = SERVER_PORT_STATE, address = SERVER_ADDR},
+		net.Endpoint{port = SERVER_PORT_STATE, address = ctx.server_ip},
 		is_event = false,
 	)
 }
