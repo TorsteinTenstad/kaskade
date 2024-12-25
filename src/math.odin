@@ -116,8 +116,12 @@ point_in_rect :: proc(point: $T, rect: ^rl.Rectangle) -> bool {
 	)
 }
 
-sort_indices_by :: proc(data: $T/[]$E, less: proc(i, j: E) -> bool) -> []int {
-	indices := make([]int, len(data))
+sort_indices_by :: proc(
+	data: $T/[]$E,
+	less: proc(i, j: E) -> bool,
+	allocator := context.allocator,
+) -> []int {
+	indices := make([]int, len(data), allocator)
 
 	for &i in indices {
 		i = -1
