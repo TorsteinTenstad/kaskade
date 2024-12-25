@@ -25,6 +25,7 @@ main :: proc() {
 	// Client
 	_client_context = client_context_create(deck)
 	graphics_create(&_client_context)
+	audio_load(&_client_context.audio)
 
 	thread.create_and_start_with_data(&_client_context, recv_state_from_server)
 

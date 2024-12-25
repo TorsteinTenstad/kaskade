@@ -109,6 +109,8 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 entity_step :: proc(ctx: ^Client_Context, entity: ^Entity) {
 	assert(entity.id == ctx.active_entity_id)
 
+	position_draw_prev := entity.position_draw
+
 	entity.position_draw = move_towards(
 		entity.position_draw,
 		f_vec_2(entity.position),
@@ -116,6 +118,9 @@ entity_step :: proc(ctx: ^Client_Context, entity: ^Entity) {
 	)
 
 	if entity.position_draw == f_vec_2(entity.position) {
+		if position_draw_prev != f_vec_2(entity.position) {
+			audio_play(&ctx.audio, Audio_Id.move)
+		}
 		select_next_entity(ctx)
 	}
 }

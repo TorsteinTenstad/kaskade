@@ -4,8 +4,6 @@ package main
 import "core:strings"
 import rl "vendor:raylib"
 
-ASSETS_PATH :: "./assets/"
-
 Graphics :: struct {
 	sprites: map[Sprite_Id]rl.Texture,
 	fonts:   map[Font_Id]rl.Font,

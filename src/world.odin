@@ -151,7 +151,6 @@ world_try_move_entity :: proc(
 		if !can_capture do return false
 		world_remove_entity(world, other_entity)
 	}
-	log_magenta("before", entity.position, "target is", target)
 	world_move_entity(world, entity, target)
 	return true
 }

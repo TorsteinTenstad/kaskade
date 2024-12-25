@@ -307,18 +307,11 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			) -> bool {
 				entity, found := world_get_entity(world, position).(^Entity)
 				found or_return
-				log_magenta(
-					"Move from",
-					entity.position,
-					"to",
-					entity.position_prev,
-				)
 				ok := world_try_move_entity(
 					world,
 					entity,
 					entity.position_prev,
 				)
-				log_magenta("position is ", entity.position)
 				return ok
 			},
 		}

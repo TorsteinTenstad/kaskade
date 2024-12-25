@@ -14,6 +14,7 @@ Headless_Client_Context :: struct {
 Client_Context :: struct {
 	physical_hand:             Physical_Hand,
 	graphics:                  Graphics,
+	audio:                     Audio,
 	active_entity_id:          int,
 	player_id:                 Player_Id,
 	game_state:                Client_Game_State,
