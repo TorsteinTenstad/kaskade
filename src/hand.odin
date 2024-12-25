@@ -112,6 +112,10 @@ hand_step_player :: proc(ctx: ^Client_Context) {
 			card.target_position =
 				mouse_gui_position + FVec2{CARD_WIDTH * 2, CARD_HEIGHT / 2}
 			mouse_world_position := camera_world_mouse_position(camera)
+			if ctx.game_state.player_color == Piece_Color.black {
+				mouse_world_position.y =
+					BOARD_HEIGHT - mouse_world_position.y - 1
+			}
 			hand.hover_target = mouse_world_position
 
 			if rl.IsMouseButtonReleased(.LEFT) {

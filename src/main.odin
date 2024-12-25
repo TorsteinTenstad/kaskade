@@ -175,7 +175,12 @@ _main_draw :: proc(ctx: ^Client_Context) {
 		}
 
 		// Entities
-		for &entity in ctx.game_state.world.entities {
+		for entity in ctx.game_state.world.entities {
+			entity := entity
+			if ctx.game_state.player_color == Piece_Color.black {
+				entity.position_draw.y =
+					BOARD_HEIGHT - entity.position_draw.y - 1
+			}
 			entity_draw(&entity)
 		}
 	}
