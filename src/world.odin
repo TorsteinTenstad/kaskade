@@ -52,7 +52,8 @@ player_try_place_entity :: proc(world: ^World, entity: Entity) -> Maybe(int) {
 
 world_add_entity :: proc(world: ^World, entity: Entity) -> int {
 	entity := entity
-	entity.draw_position = f_vec_2(entity.position)
+	entity.position_prev = entity.position
+	entity.position_draw = f_vec_2(entity.position)
 	entity.id = world.next_world_object_id
 	world.next_world_object_id += 1
 	append(&world.entities, entity)
@@ -135,4 +136,30 @@ _world_get_entity_index :: proc(world: ^World, entity_id: int) -> Maybe(int) {
 world_is_empty :: proc(world: ^World, world_position: IVec2) -> bool {
 	_, not_empty := world_get_entity(world, world_position).(^Entity)
 	return !not_empty
+}
+
+
+world_try_move_entity :: proc(
+	world: ^World,
+	entity: ^Entity,
+	target: IVec2,
+) -> bool {
+	other_entity, occupied := world_get_entity(world, target).(^Entity)
+
+	if occupied {
+		can_capture := entity.capturing && other_entity.color != entity.color
+		if !can_capture do return false
+		world_remove_entity(world, other_entity)
+	}
+	log_magenta("before", entity.position, "target is", target)
+	world_move_entity(world, entity, target)
+	return true
+}
+
+world_move_entity :: proc(_: ^World, entity: ^Entity, target: IVec2) -> bool {
+	if entity.position == target do return false
+	position_prev := entity.position
+	entity.position = target
+	entity.position_prev = position_prev
+	return true
 }

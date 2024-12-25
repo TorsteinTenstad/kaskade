@@ -22,28 +22,9 @@ Entity :: struct {
 	kind:          Entity_Kind,
 	color:         Piece_Color,
 	position:      IVec2,
-	draw_position: FVec2,
+	position_prev: IVec2,
+	position_draw: FVec2,
 	capturing:     bool,
-}
-
-entity_try_move_to :: proc(
-	world: ^World,
-	entity: ^Entity,
-	target: IVec2,
-) -> bool {
-	other_entity, occupied := world_get_entity(world, target).(^Entity)
-	if occupied {
-		if entity.capturing && other_entity.color != entity.color {
-			world_remove_entity(world, other_entity)
-			entity.position = target
-			return true
-		} else {
-			return false
-		}
-	} else {
-		entity.position = target
-		return true
-	}
 }
 
 entity_direction :: proc(color: Piece_Color) -> int {
@@ -58,25 +39,25 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 
 	switch entity.kind {
 	case .pawn:
-		entity_try_move_to(
+		world_try_move_entity(
 			world,
 			entity,
 			entity.position + IVec2{0, entity_dir},
 		)
 	case .knight:
-		entity_try_move_to(
+		world_try_move_entity(
 			world,
 			entity,
 			entity.position + IVec2{0, entity_dir},
 		)
 		for !world_is_empty(world, entity.position + IVec2{0, entity_dir}) {
-			if entity_try_move_to(
+			if world_try_move_entity(
 				world,
 				entity,
 				entity.position + IVec2{1, entity_dir},
 			) {continue}
 
-			if entity_try_move_to(
+			if world_try_move_entity(
 				world,
 				entity,
 				entity.position + IVec2{-1, entity_dir},
@@ -85,7 +66,7 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 			break
 		}
 	case .bishop:
-		entity_try_move_to(
+		world_try_move_entity(
 			world,
 			entity,
 			entity.position + IVec2{0, entity_dir},
@@ -93,7 +74,7 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 	case .rook:
 		for x in (entity.position.x + 1) ..< BOARD_WIDTH {
 			if !world_is_empty(world, IVec2{x, entity.position.y}) {
-				if entity_try_move_to(
+				if world_try_move_entity(
 					world,
 					entity,
 					IVec2{x, entity.position.y},
@@ -106,7 +87,7 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 		for x in 0 ..< entity.position.x {
 			x_reverse := entity.position.x - 1 - x
 			if !world_is_empty(world, IVec2{x_reverse, entity.position.y}) {
-				if (entity_try_move_to(
+				if (world_try_move_entity(
 						   world,
 						   entity,
 						   IVec2{x_reverse, entity.position.y},
@@ -117,7 +98,7 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 		}
 	case .queen:
 	case .king:
-		entity_try_move_to(
+		world_try_move_entity(
 			world,
 			entity,
 			entity.position + IVec2{0, entity_dir},
@@ -128,13 +109,13 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 entity_step :: proc(ctx: ^Client_Context, entity: ^Entity) {
 	assert(entity.id == ctx.active_entity_id)
 
-	entity.draw_position = move_towards(
-		entity.draw_position,
+	entity.position_draw = move_towards(
+		entity.position_draw,
 		f_vec_2(entity.position),
 		0.25,
 	)
 
-	if entity.draw_position == f_vec_2(entity.position) {
+	if entity.position_draw == f_vec_2(entity.position) {
 		select_next_entity(ctx)
 	}
 }
@@ -159,7 +140,7 @@ entity_draw :: proc(entity: ^Entity) {
 	texture := graphics.sprites[sprite_id]
 	surface_position := camera_world_to_surface(
 		&graphics.camera,
-		entity.draw_position,
+		entity.position_draw,
 	)
 	rl.DrawTextureEx(texture, surface_position - {1, 0}, 0, 1.0, rl.BLACK)
 	rl.DrawTextureEx(texture, surface_position, 0, 1.0, rl.WHITE)

@@ -14,6 +14,7 @@ Card_Id :: enum {
 	haste,
 	obduction,
 	give_arms,
+	halt,
 }
 
 Card_Kind :: enum {
@@ -290,6 +291,35 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				found or_return
 				entity.capturing = true
 				return true
+			},
+		}
+	case .halt:
+		return Card {
+			id = .halt,
+			name = "Halt",
+			kind = Card_Kind.spell,
+			description = "Move a piece to its previous position",
+			cost = 1,
+			play = proc(
+				world: ^World,
+				color: Piece_Color,
+				position: IVec2,
+			) -> bool {
+				entity, found := world_get_entity(world, position).(^Entity)
+				found or_return
+				log_magenta(
+					"Move from",
+					entity.position,
+					"to",
+					entity.position_prev,
+				)
+				ok := world_try_move_entity(
+					world,
+					entity,
+					entity.position_prev,
+				)
+				log_magenta("position is ", entity.position)
+				return ok
 			},
 		}
 	}

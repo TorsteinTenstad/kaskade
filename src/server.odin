@@ -236,7 +236,7 @@ game_update_from_message :: proc(
 	}
 
 	for &entity in world.entities {
-		entity.draw_position = f_vec_2(entity.position)
+		entity.position_draw = f_vec_2(entity.position)
 	}
 
 	_, is_end_turn := msg.end_turn.(End_Turn)
