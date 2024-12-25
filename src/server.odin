@@ -72,7 +72,7 @@ listen_tcp :: proc(
 			game_state_send(ctx, init_msg.player_id)
 			continue
 		}
-		update_deck(ctx, init_msg)
+		recv_deck(ctx, init_msg)
 
 		if len(sockets) == 2 {
 			game_start(ctx)
@@ -150,11 +150,11 @@ listen_state :: proc(raw_ptr: rawptr) {
 	)
 }
 
-update_deck :: proc(ctx: ^Server_Context, msg: Client_To_Server) -> bool {
+recv_deck :: proc(ctx: ^Server_Context, msg: Client_To_Server) -> bool {
 	deck := msg.deck.(Deck) or_return
 	ctx.decks[msg.player_id] = deck
 	deck_shuffle(&ctx.decks[msg.player_id])
-	return false
+	return true
 }
 
 server_start :: proc(ctx: ^Server_Context) {
@@ -213,7 +213,6 @@ game_update_from_message :: proc(
 	msg: Client_To_Server,
 ) -> bool {
 	game_state := (&ctx.game_state.(Server_Game_State)) or_return
-	update_deck(ctx, msg) or_return
 
 	world := &game_state.world
 	player: ^Player
