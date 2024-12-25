@@ -159,7 +159,7 @@ _main_draw :: proc(ctx: ^Client_Context) {
 		card_index, is_hovering := ctx.physical_hand.hover_index.(int)
 		if is_hovering {
 			card := &ctx.physical_hand.cards[card_index]
-			world_positions := card_get_positions(&card.card)
+			world_positions := card_get_positions(&card.card) // TODO: fix card_get_positions
 			for world_position in world_positions {
 				surface_position := i32_vec_2(
 					camera_world_to_surface(camera, world_position),

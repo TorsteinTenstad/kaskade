@@ -112,11 +112,11 @@ hand_step_player :: proc(ctx: ^Client_Context) {
 			card.target_position =
 				mouse_gui_position + FVec2{CARD_WIDTH * 2, CARD_HEIGHT / 2}
 			mouse_world_position := camera_world_mouse_position(camera)
+			hand.hover_target = mouse_world_position
 			if ctx.game_state.player_color == Piece_Color.black {
 				mouse_world_position.y =
 					BOARD_HEIGHT - mouse_world_position.y - 1
 			}
-			hand.hover_target = mouse_world_position
 
 			if rl.IsMouseButtonReleased(.LEFT) {
 				hand_play(ctx, hover_index, world, mouse_world_position)
@@ -186,7 +186,7 @@ hand_draw_gui :: proc(hand: ^Physical_Hand, camera: ^Camera) {
 	if is_hovering && is_targeting {
 		gui_position := camera_world_to_gui(camera, hover_target)
 		scale := camera_surface_scale(camera)
-		rl.DrawRectangleRoundedLines(
+		rl.DrawRectangleRoundedLinesEx(
 			rl.Rectangle {
 				gui_position.x,
 				gui_position.y,
