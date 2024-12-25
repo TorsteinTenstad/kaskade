@@ -69,7 +69,7 @@ ai_do_action :: proc(
 			if entity.kind != Entity_Kind.pawn do continue
 			if entity.color != game_state.player_color do continue
 			if entity.capturing do continue
-			if world_is_empty(&game_state.world, entity.position + IVec2{0, entity_direction(entity.color)}) do continue
+			if world_is_empty(&game_state.world, entity.position + entity_direction_y(entity.color)) do continue
 			card_idx := hand_find_card(
 				&game_state.hand,
 				Card_Id.give_arms,

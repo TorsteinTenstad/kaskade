@@ -138,7 +138,6 @@ world_is_empty :: proc(world: ^World, world_position: IVec2) -> bool {
 	return !not_empty
 }
 
-
 world_try_move_entity :: proc(
 	world: ^World,
 	entity: ^Entity,

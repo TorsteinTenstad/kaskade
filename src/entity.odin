@@ -27,82 +27,65 @@ Entity :: struct {
 	capturing:     bool,
 }
 
-entity_direction :: proc(color: Piece_Color) -> int {
+entity_direction_x :: proc(color: Piece_Color) -> IVec2 {
 	if color == .black {
-		return 1
+		return IVec2{-1, 0}
 	}
-	return -1
+	return IVec2{1, 0}
+}
+entity_direction_y :: proc(color: Piece_Color) -> IVec2 {
+	if color == .black {
+		return IVec2{0, 1}
+	}
+	return IVec2{0, -1}
 }
 
 entity_run_action :: proc(world: ^World, entity: ^Entity) {
-	entity_dir := entity_direction(entity.color)
+	dir_x := entity_direction_x(entity.color)
+	dir_y := entity_direction_y(entity.color)
 
 	switch entity.kind {
 	case .pawn:
-		world_try_move_entity(
-			world,
-			entity,
-			entity.position + IVec2{0, entity_dir},
-		)
+		world_try_move_entity(world, entity, entity.position + dir_y)
 	case .knight:
-		world_try_move_entity(
-			world,
-			entity,
-			entity.position + IVec2{0, entity_dir},
-		)
-		for !world_is_empty(world, entity.position + IVec2{0, entity_dir}) {
+		world_try_move_entity(world, entity, entity.position + dir_y)
+		for !world_is_empty(world, entity.position + dir_y) {
 			if world_try_move_entity(
 				world,
 				entity,
-				entity.position + IVec2{1, entity_dir},
+				entity.position + dir_y + dir_x,
 			) {continue}
 
 			if world_try_move_entity(
 				world,
 				entity,
-				entity.position + IVec2{-1, entity_dir},
+				entity.position + dir_y - dir_x,
 			) {continue}
 
 			break
 		}
 	case .bishop:
-		world_try_move_entity(
-			world,
-			entity,
-			entity.position + IVec2{0, entity_dir},
-		)
-	case .rook:
-		for x in (entity.position.x + 1) ..< BOARD_WIDTH {
-			if !world_is_empty(world, IVec2{x, entity.position.y}) {
-				if world_try_move_entity(
-					world,
-					entity,
-					IVec2{x, entity.position.y},
-				) {
-					return
-				}
+		directions: []IVec2 = {
+			dir_x + dir_y,
+			-dir_x + dir_y,
+			dir_x - dir_y,
+			-dir_x - dir_y,
+		}
 
-			}
-		}
-		for x in 0 ..< entity.position.x {
-			x_reverse := entity.position.x - 1 - x
-			if !world_is_empty(world, IVec2{x_reverse, entity.position.y}) {
-				if (world_try_move_entity(
-						   world,
-						   entity,
-						   IVec2{x_reverse, entity.position.y},
-					   )) {
+		for direction in directions {
+			for i in 1 ..< max(BOARD_WIDTH, BOARD_HEIGHT) {
+				position := entity.position + direction * i
+				if !world_is_empty(world, position) &&
+				   world_try_move_entity(world, entity, position) {
 					return
 				}
 			}
 		}
+	case .rook:
+		world_try_move_entity(world, entity, entity.position + dir_y)
 	case .queen:
 	case .king:
-		world_try_move_entity(
-			world,
-			entity,
-			entity.position + IVec2{0, entity_dir},
-		)
+		world_try_move_entity(world, entity, entity.position + dir_y)
 	}
 }
 
