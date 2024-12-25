@@ -157,9 +157,9 @@ world_try_move_entity :: proc(
 }
 
 world_move_entity :: proc(_: ^World, entity: ^Entity, target: IVec2) -> bool {
-	if entity.position == target do return false
-	position_prev := entity.position
+	log_magenta("before", entity.position, "target is", target)
+	entity.position_prev = entity.position
 	entity.position = target
-	entity.position_prev = position_prev
+	log_magenta("after", entity.position, "target is", target)
 	return true
 }
