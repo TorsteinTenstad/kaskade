@@ -48,6 +48,7 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 	case .pawn:
 		world_try_move_entity(world, entity, entity.position + dir_y)
 	case .knight:
+		position_prev := entity.position
 		world_try_move_entity(world, entity, entity.position + dir_y)
 		for !world_is_empty(world, entity.position + dir_y) {
 			if world_try_move_entity(
@@ -64,6 +65,9 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 
 			break
 		}
+		if entity.position != position_prev {
+			entity.position_prev = position_prev
+		}
 	case .bishop:
 		directions: []IVec2 = {
 			dir_x + dir_y,
@@ -75,9 +79,12 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 		for direction in directions {
 			for i in 1 ..< max(BOARD_WIDTH, BOARD_HEIGHT) {
 				position := entity.position + direction * i
-				if !world_is_empty(world, position) &&
-				   world_try_move_entity(world, entity, position) {
-					return
+				if !world_is_empty(world, position) {
+					if world_try_move_entity(world, entity, position) {
+						return
+					} else {
+						break
+					}
 				}
 			}
 		}
