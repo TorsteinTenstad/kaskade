@@ -256,7 +256,16 @@ game_update_from_message :: proc(
 			entity := world_get_entity(world, id).(^Entity) or_continue
 			if entity.color != game_state.active_color do continue
 
+			triggers_twice := entity.triggers_twice
+			entity.triggers_twice = false
 			entity_run_action(world, entity)
+
+			if triggers_twice {
+				entity = world_get_entity(world, id).(^Entity) or_continue
+				if entity.color != game_state.active_color do continue
+
+				entity_run_action(world, entity)
+			}
 		}
 
 		// Update max mana

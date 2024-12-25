@@ -27,6 +27,7 @@ Sprite_Id :: enum {
 	queen_w,
 	king_w,
 	icon_capturing,
+	icon_haste,
 }
 
 Sprite_Paths := [Sprite_Id]string {
@@ -45,6 +46,7 @@ Sprite_Paths := [Sprite_Id]string {
 	.queen_w        = "white_queen.png",
 	.king_w         = "white_king.png",
 	.icon_capturing = "icon_capturing.png",
+	.icon_haste     = "icon_haste.png",
 }
 
 Font_Id :: enum {

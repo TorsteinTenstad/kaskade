@@ -18,13 +18,14 @@ Piece_Color :: enum {
 }
 
 Entity :: struct {
-	id:            int,
-	kind:          Entity_Kind,
-	color:         Piece_Color,
-	position:      IVec2,
-	position_prev: IVec2,
-	position_draw: FVec2,
-	capturing:     bool,
+	id:             int,
+	kind:           Entity_Kind,
+	color:          Piece_Color,
+	position:       IVec2,
+	position_prev:  IVec2,
+	position_draw:  FVec2,
+	capturing:      bool,
+	triggers_twice: bool,
 }
 
 entity_direction_x :: proc(color: Piece_Color) -> IVec2 {
@@ -141,6 +142,10 @@ entity_draw :: proc(entity: ^Entity) {
 	if entity.capturing {
 		texture_capturing := graphics.sprites[Sprite_Id.icon_capturing]
 		rl.DrawTextureEx(texture_capturing, surface_position, 0, 1.0, rl.WHITE)
+	}
+	if entity.triggers_twice {
+		texture_haste := graphics.sprites[Sprite_Id.icon_haste]
+		rl.DrawTextureEx(texture_haste, surface_position, 0, 1.0, rl.WHITE)
 	}
 }
 

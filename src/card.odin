@@ -237,16 +237,15 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			id = .haste,
 			name = "Haste",
 			kind = Card_Kind.spell,
-			description = "Trigger a piece",
+			description = "Chosen piece triggers twice",
 			cost = 2,
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				entity, found := world_get_entity(world, position).(^Entity)
-				found or_return
-				entity_run_action(world, entity)
+				entity := world_get_entity(world, position).(^Entity) or_return
+				entity.triggers_twice = true
 				return true
 			},
 		}
