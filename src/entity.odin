@@ -130,7 +130,10 @@ entity_draw :: proc(entity: ^Entity) {
 		&graphics.camera,
 		entity.position_draw,
 	)
-	rl.DrawTextureEx(texture, surface_position - {1, 0}, 0, 1.0, rl.BLACK)
+	if entity.capturing {
+		texture_capturing := graphics.sprites[Sprite_Id.icon_capturing]
+		rl.DrawTextureEx(texture_capturing, surface_position, 0, 1.0, rl.WHITE)
+	}
 	rl.DrawTextureEx(texture, surface_position, 0, 1.0, rl.WHITE)
 }
 
