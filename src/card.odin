@@ -281,7 +281,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			name = "Give Arms",
 			kind = Card_Kind.spell,
 			description = "Give a piece the ability to capture",
-			cost = 2,
+			cost = 3,
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
