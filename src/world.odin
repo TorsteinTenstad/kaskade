@@ -148,10 +148,13 @@ world_try_move_entity :: proc(
 	if occupied {
 		can_capture := entity.capturing && other_entity.color != entity.color
 		if !can_capture do return false
+		world_move_entity(world, entity, target)
 		world_remove_entity(world, other_entity)
+		return true
+	} else {
+		world_move_entity(world, entity, target)
+		return true
 	}
-	world_move_entity(world, entity, target)
-	return true
 }
 
 world_move_entity :: proc(_: ^World, entity: ^Entity, target: IVec2) -> bool {
