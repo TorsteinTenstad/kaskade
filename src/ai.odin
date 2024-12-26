@@ -3,7 +3,6 @@ package main
 
 import "core:math/rand"
 import "core:net"
-import "core:time"
 
 ai_run :: proc(server_ip: net.IP4_Address) {
 	deck := deck_load_json("data/ai_deck.json")
@@ -25,7 +24,6 @@ ai_run :: proc(server_ip: net.IP4_Address) {
 
 		if game_state.player_color == game_state.active_color {
 			found_something_to_play := ai_do_action(&ctx, game_state)
-			log_magenta("found_something_to_play", found_something_to_play)
 			if !found_something_to_play {
 				send_package(
 					ctx.socket_event,
@@ -61,8 +59,6 @@ ai_do_action :: proc(
 	ctx: ^Headless_Client_Context,
 	game_state: ^Client_Game_State,
 ) -> bool {
-	time.sleep(time.Second)
-
 	// Check for good give arms target
 	if game_state.mana >= 3 {
 		for &entity in game_state.world.entities {

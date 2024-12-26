@@ -21,6 +21,14 @@ FVec2 :: rl.Vector2
 IVec2 :: distinct [2]int
 I32Vec2 :: distinct [2]i32
 
+lerp :: proc(a: FVec2, b: FVec2, t: f32) -> FVec2 {
+	return FVec2{a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t}
+}
+
+fmod :: proc(a: f64, b: f64) -> f64 {
+	return a - math.round(a / b) * b
+}
+
 f_vec_2_from_i :: proc(x: $T, y: T) -> FVec2 {
 	return FVec2{f32(x), f32(y)}
 }

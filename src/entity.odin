@@ -127,45 +127,12 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 	}
 }
 
-entity_step :: proc(ctx: ^Client_Context, entity: ^Entity) {
-	assert(entity.id == ctx.active_entity_id)
-
-	position_draw_prev := entity.position_draw
-
-	entity.position_draw = move_towards(
-		entity.position_draw,
-		f_vec_2(entity.position),
-		0.1,
-	)
-
-	if entity.position_draw == f_vec_2(entity.position) {
-		if position_draw_prev != f_vec_2(entity.position) {
-			audio_play(&ctx.audio, Audio_Id.move)
-		}
-		select_next_entity(ctx)
-	}
-}
-
-select_next_entity :: proc(ctx: ^Client_Context) {
-	index := -1
-	for entity, i in ctx.game_state.world.entities {
-		if entity.id == ctx.active_entity_id {
-			index = (i + 1) % len(ctx.game_state.world.entities)
-			break
-		}
-	}
-	if index != -1 {
-		entity := &ctx.game_state.world.entities[index]
-		ctx.active_entity_id = entity.id
-	}
-}
-
-entity_draw :: proc(entity: ^Entity) {
+entity_draw :: proc(entity: ^Entity, position_draw: FVec2) {
 	graphics := &get_context().graphics
 	texture := entity_get_texture(entity)
 	surface_position := camera_world_to_surface(
 		&graphics.camera,
-		entity.position_draw,
+		position_draw,
 	)
 	rl.DrawTextureEx(texture, surface_position, 0, 1.0, rl.WHITE)
 	if entity.capturing {

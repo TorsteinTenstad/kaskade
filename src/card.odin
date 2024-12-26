@@ -304,6 +304,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				entity, found := world_get_entity(world, position).(^Entity)
 				found or_return
 				entity.capturing = true
+				world_push_entity_history(world)
 				return true
 			},
 		}

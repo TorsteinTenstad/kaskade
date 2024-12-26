@@ -12,16 +12,17 @@ Headless_Client_Context :: struct {
 }
 
 Client_Context :: struct {
-	physical_hand:             Physical_Hand,
-	graphics:                  Graphics,
-	audio:                     Audio,
-	active_entity_id:          int,
-	player_id:                 Player_Id,
-	game_state:                Client_Game_State,
-	game_state_incoming:       Maybe(Client_Game_State),
-	game_state_incoming_mutex: sync.Recursive_Mutex,
-	socket_event:              net.TCP_Socket,
-	socket_state:              net.TCP_Socket,
+	physical_hand:                   Physical_Hand,
+	graphics:                        Graphics,
+	audio:                           Audio,
+	entity_history_animation_idx:    int,
+	entity_history_animation_lerp_t: f32,
+	player_id:                       Player_Id,
+	game_state:                      Client_Game_State,
+	game_state_incoming:             Maybe(Client_Game_State),
+	game_state_incoming_mutex:       sync.Recursive_Mutex,
+	socket_event:                    net.TCP_Socket,
+	socket_state:                    net.TCP_Socket,
 }
 
 Client_To_Server :: struct {
@@ -106,10 +107,6 @@ game_state_apply_incoming :: proc(ctx: ^Client_Context) -> bool {
 
 	ctx.game_state = game_state_incoming
 	ctx.game_state_incoming = nil
-
-	if len(ctx.game_state.world.entities) > 0 {
-		ctx.active_entity_id = ctx.game_state.world.entities[0].id
-	}
 
 	cards_equal :=
 		len(ctx.physical_hand.cards) == len(ctx.game_state.hand.cards)

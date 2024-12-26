@@ -38,7 +38,6 @@ send_package :: proc(socket: net.TCP_Socket, msg: $T) -> bool {
 		return false
 	}
 
-	log_blue(string(buf))
 	return true
 }
 
@@ -79,8 +78,6 @@ recv_package :: proc(socket: net.TCP_Socket, msg: $T) -> bool {
 		log_red(unmarshal_err, "when unmarshaling", string(buf))
 		return false
 	}
-
-	log_green(string(buf))
 
 	return true
 }

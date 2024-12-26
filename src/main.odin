@@ -100,16 +100,6 @@ _main_step :: proc(ctx: ^Client_Context) {
 	camera := &ctx.graphics.camera
 	camera_step(camera, &ctx.game_state.world)
 
-	// Entities
-	active_entity, has_active_entity := world_get_entity(
-		&ctx.game_state.world,
-		ctx.active_entity_id,
-	).(^Entity)
-
-	if has_active_entity {
-		entity_step(ctx, active_entity)
-	}
-
 	// Hand and input
 	hand_step(ctx)
 
@@ -131,6 +121,15 @@ _main_step :: proc(ctx: ^Client_Context) {
 
 COLOR_BACKGROUND_DARK: rl.Color : {21, 18, 20, 255}
 COLOR_BACKGROUND_LIGHT: rl.Color : {29, 25, 27, 255}
+
+flip_if_black :: proc(vec: FVec2, color: Piece_Color) -> FVec2 {
+	vec := vec
+	if color == Piece_Color.black {
+		vec.y = BOARD_HEIGHT - vec.y - 1
+		vec.x = BOARD_WIDTH - vec.x - 1
+	}
+	return vec
+}
 
 @(private = "file")
 _main_draw :: proc(ctx: ^Client_Context) {
@@ -175,15 +174,61 @@ _main_draw :: proc(ctx: ^Client_Context) {
 		}
 
 		// Entities
-		for entity in ctx.game_state.world.entities {
-			entity := entity
-			if ctx.game_state.player_color == Piece_Color.black {
-				entity.position_draw.y =
-					BOARD_HEIGHT - entity.position_draw.y - 1
-				entity.position_draw.x =
-					BOARD_WIDTH - entity.position_draw.x - 1
+		if ctx.entity_history_animation_idx <
+		   (len(ctx.game_state.world.entity_history) - 1) {
+			ctx.entity_history_animation_lerp_t += 5 * rl.GetFrameTime()
+			if ctx.entity_history_animation_lerp_t >= 1.0 {
+				ctx.entity_history_animation_lerp_t -= 1.0
+				ctx.entity_history_animation_idx += 1
 			}
-			entity_draw(&entity)
+		}
+
+		if ctx.entity_history_animation_idx <
+		   (len(ctx.game_state.world.entity_history) - 1) {
+			entities_animation_origin := &ctx.game_state.world.entity_history[ctx.entity_history_animation_idx]
+			entities := &ctx.game_state.world.entity_history[ctx.entity_history_animation_idx + 1]
+			for &entity in entities {
+				found_origin := false
+				for &entity_animation_origin in entities_animation_origin {
+					if entity.id == entity_animation_origin.id {
+						found_origin = true
+						position_draw := lerp(
+							f_vec_2(entity_animation_origin.position),
+							f_vec_2(entity.position),
+							ctx.entity_history_animation_lerp_t,
+						)
+						entity_draw(
+							&entity,
+							flip_if_black(
+								position_draw,
+								ctx.game_state.player_color,
+							),
+						)
+						break
+					}
+				}
+				if !found_origin {
+					entity_draw(
+						&entity,
+						flip_if_black(
+							f_vec_2(entity.position),
+							ctx.game_state.player_color,
+						),
+					)
+				}
+			}
+		} else if ctx.entity_history_animation_idx <
+		   len(ctx.game_state.world.entity_history) {
+			entities := &ctx.game_state.world.entity_history[ctx.entity_history_animation_idx]
+			for &entity in entities {
+				entity_draw(
+					&entity,
+					flip_if_black(
+						f_vec_2(entity.position),
+						ctx.game_state.player_color,
+					),
+				)
+			}
 		}
 	}
 	rl.EndTextureMode()

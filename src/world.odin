@@ -3,6 +3,7 @@ package main
 
 World :: struct {
 	entities:             [dynamic]Entity,
+	entity_history:       [dynamic]([]Entity),
 	next_world_object_id: int,
 }
 
@@ -50,6 +51,14 @@ player_try_place_entity :: proc(world: ^World, entity: Entity) -> Maybe(int) {
 	return nil
 }
 
+world_push_entity_history :: proc(world: ^World) {
+	entities := make([]Entity, len(world.entities))
+	for &entity, i in world.entities {
+		entities[i] = entity
+	}
+	append(&world.entity_history, entities)
+}
+
 world_add_entity :: proc(world: ^World, entity: Entity) -> int {
 	entity := entity
 	entity.position_prev = entity.position
@@ -57,6 +66,7 @@ world_add_entity :: proc(world: ^World, entity: Entity) -> int {
 	entity.id = world.next_world_object_id
 	world.next_world_object_id += 1
 	append(&world.entities, entity)
+	world_push_entity_history(world)
 	return entity.id
 }
 
@@ -82,6 +92,7 @@ _world_remove_entity_from_struct :: proc(
 _world_remove_entity_from_id :: proc(world: ^World, entity_id: int) -> bool {
 	index := _world_get_entity_index(world, entity_id).(int) or_return
 	unordered_remove(&world.entities, index)
+	world_push_entity_history(world)
 	return true
 }
 
@@ -158,11 +169,16 @@ world_try_move_entity :: proc(
 	}
 }
 
-world_move_entity :: proc(_: ^World, entity: ^Entity, target: IVec2) -> bool {
+world_move_entity :: proc(
+	world: ^World,
+	entity: ^Entity,
+	target: IVec2,
+) -> bool {
 	if entity.position == target do return false
 	position_prev := entity.position
 	entity.position = target
 	entity.position_prev = position_prev
+	world_push_entity_history(world)
 	return true
 }
 
