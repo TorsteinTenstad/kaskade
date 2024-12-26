@@ -61,16 +61,17 @@ recv_package :: proc(socket: net.TCP_Socket, msg: $T) -> bool {
 
 	buf := make([]u8, size)
 	defer delete(buf)
-	msg_bytes_read, recv_buf_error := net.recv_tcp(socket, buf)
+	buf_index := 0
+	for buf_index < size {
 
-	if recv_buf_error != nil {
-		log_red(recv_buf_error)
-		return false
-	}
+		msg_bytes_read, recv_buf_error := net.recv_tcp(socket, buf[buf_index:])
 
-	if (msg_bytes_read != size) {
-		log_red("Expected to receive", size, "bytes. Received", msg_bytes_read)
-		return false
+		if recv_buf_error != nil {
+			log_red(recv_buf_error)
+			return false
+		}
+
+		buf_index += msg_bytes_read
 	}
 
 	unmarshal_err := json.unmarshal(buf, msg)
