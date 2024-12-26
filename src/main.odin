@@ -268,6 +268,15 @@ _main_draw :: proc(ctx: ^Client_Context) {
 			format("Mana:", ctx.game_state.mana, "/", ctx.game_state.mana_max),
 			{16, 128},
 		)
+		draw_text("Points:", {16, 160})
+		draw_text(
+			format("\tWhite:", ctx.game_state.world.points_black),
+			{16, 192},
+		)
+		draw_text(
+			format("\tBlack:", ctx.game_state.world.points_white),
+			{16, 224},
+		)
 
 		hand_draw_gui(&ctx.physical_hand, camera)
 	}

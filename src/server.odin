@@ -249,16 +249,39 @@ game_update_from_message :: proc(
 
 		// Move pieces
 		// TODO: decide piece order
-		entity_ids := world_get_entity_ids(world)
-		defer delete(entity_ids)
+		{
+			entity_ids := world_get_entity_ids(world)
+			defer delete(entity_ids)
 
-		for id in entity_ids {
-			entity := world_get_entity(world, id).(^Entity) or_continue
-			entity.exhausted_for_turns = max(0, entity.exhausted_for_turns - 1)
-			if entity.color != game_state.active_color do continue
-			if entity.exhausted_for_turns > 0 do continue
-			entity_run_action(world, entity)
+			for id in entity_ids {
+				entity := world_get_entity(world, id).(^Entity) or_continue
+				entity.exhausted_for_turns = max(
+					0,
+					entity.exhausted_for_turns - 1,
+				)
+				if entity.color != game_state.active_color do continue
+				if entity.exhausted_for_turns > 0 do continue
+				entity_run_action(world, entity)
+			}
 		}
+		{
+			entity_ids := world_get_entity_ids(world)
+			defer delete(entity_ids)
+
+			for id in entity_ids {
+				entity := world_get_entity(world, id).(^Entity) or_continue
+				if player_in_win_zone(entity.color, entity.position) {
+					log_magenta(entity.color, "gained 1 point")
+					if entity.color == Piece_Color.white {
+						game_state.world.points_white += 1
+					} else {
+						game_state.world.points_black += 1
+					}
+					world_remove_entity(world, id)
+				}
+			}
+		}
+
 
 		// Update max mana
 		if game_state.active_color == Piece_Color.white {

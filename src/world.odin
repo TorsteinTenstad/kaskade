@@ -5,6 +5,8 @@ World :: struct {
 	entities:             [dynamic]Entity,
 	entity_history:       [dynamic]([]Entity),
 	next_world_object_id: int,
+	points_white:         int,
+	points_black:         int,
 }
 
 player_in_spawn_zone :: proc(player: Piece_Color, pos: IVec2) -> bool {
@@ -14,7 +16,7 @@ player_in_spawn_zone :: proc(player: Piece_Color, pos: IVec2) -> bool {
 			0 <= pos.x &&
 			pos.x < BOARD_WIDTH &&
 			(BOARD_HEIGHT - SPAWN_ZONE_DEPTH) <= pos.y &&
-			pos.y < BOARD_WIDTH \
+			pos.y < BOARD_HEIGHT \
 		)
 	case .black:
 		return(
@@ -22,6 +24,27 @@ player_in_spawn_zone :: proc(player: Piece_Color, pos: IVec2) -> bool {
 			pos.x < BOARD_WIDTH &&
 			0 <= pos.y &&
 			pos.y < SPAWN_ZONE_DEPTH \
+		)
+	}
+	assert(false, "non-exhaustive")
+	return false
+}
+
+player_in_win_zone :: proc(player: Piece_Color, pos: IVec2) -> bool {
+	switch player {
+	case .black:
+		return(
+			0 <= pos.x &&
+			pos.x < BOARD_WIDTH &&
+			(BOARD_HEIGHT - WIN_ZONE_DEPTH) <= pos.y &&
+			pos.y < BOARD_HEIGHT \
+		)
+	case .white:
+		return(
+			0 <= pos.x &&
+			pos.x < BOARD_WIDTH &&
+			0 <= pos.y &&
+			pos.y < WIN_ZONE_DEPTH \
 		)
 	}
 	assert(false, "non-exhaustive")
