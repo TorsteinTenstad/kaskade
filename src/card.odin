@@ -9,7 +9,7 @@ Card_Id :: enum {
 	knight,
 	ranger,
 	swordsman,
-	queen,
+	bomber,
 	king,
 	haste,
 	obduction,
@@ -96,7 +96,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 	case .squire:
 		return Card {
 			id = .squire,
-			name = "Pawn",
+			name = "Squire",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
 			cost = 1,
@@ -146,7 +146,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 	case .ranger:
 		return Card {
 			id = .ranger,
-			name = "Bishop",
+			name = "Ranger",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
 			cost = 3,
@@ -172,7 +172,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 	case .swordsman:
 		return Card {
 			id = .swordsman,
-			name = "Rook",
+			name = "Swordsman",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
 			cost = 3,
@@ -195,10 +195,10 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				)
 			},
 		}
-	case .queen:
+	case .bomber:
 		return Card {
-			id = .queen,
-			name = "Queen",
+			id = .bomber,
+			name = "Bomber",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
 			cost = 4,
