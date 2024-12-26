@@ -92,8 +92,31 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 		}
 	case .swordsman:
 		world_try_move_entity(world, entity, entity.position + dir_y)
-	case .bomb:
 	case .bomber:
+		for world_try_move_entity(world, entity, entity.position + dir_y) {}
+		world_remove_entity(world, entity.id)
+		world_add_entity(
+			world,
+			Entity {
+				kind = .bomb,
+				color = entity.color,
+				position = entity.position,
+				position_prev = entity.position,
+				position_draw = f_vec_2(entity.position),
+			},
+		)
+	case .bomb:
+		entity_ids := world_get_entity_ids(world)
+		defer delete(entity_ids)
+		entity_position := entity.position
+		for id in entity_ids {
+			other_entity := world_get_entity(world, id).(^Entity) or_continue
+			distance_vec := entity_position - other_entity.position
+			if abs(distance_vec.x) <= 1 && abs(distance_vec.y) <= 1 {
+				world_remove_entity(world, other_entity.id)
+
+			}
+		}
 	case .king:
 		world_try_move_entity(world, entity, entity.position + dir_y)
 	}

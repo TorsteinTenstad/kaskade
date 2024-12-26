@@ -12,7 +12,6 @@ Card_Id :: enum {
 	bomber,
 	king,
 	haste,
-	obduction,
 	give_arms,
 	halt,
 }
@@ -201,7 +200,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			name = "Bomber",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
-			cost = 4,
+			cost = 3,
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
@@ -259,31 +258,6 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			) -> bool {
 				entity := world_get_entity(world, position).(^Entity) or_return
 				entity.triggers_twice = true
-				return true
-			},
-		}
-	case .obduction:
-		return Card {
-			id = .obduction,
-			name = "Obduction",
-			kind = Card_Kind.spell,
-			description = "Remove all pieces in a 3x3 square.",
-			cost = 4,
-			play = proc(
-				world: ^World,
-				color: Piece_Color,
-				position: IVec2,
-			) -> bool {
-				entity_ids := world_get_entity_ids(world)
-				defer delete(entity_ids)
-
-				for id in entity_ids {
-					entity := world_get_entity(world, id).(^Entity) or_continue
-					distance_vec := position - entity.position
-					if abs(distance_vec.x) <= 1 && abs(distance_vec.y) <= 1 {
-						world_remove_entity(world, entity.id)
-					}
-				}
 				return true
 			},
 		}

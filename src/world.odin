@@ -143,6 +143,7 @@ world_try_move_entity :: proc(
 	entity: ^Entity,
 	target: IVec2,
 ) -> bool {
+	if !world_is_in_bounds(target) do return false
 	other_entity, occupied := world_get_entity(world, target).(^Entity)
 
 	if occupied {
@@ -163,4 +164,13 @@ world_move_entity :: proc(_: ^World, entity: ^Entity, target: IVec2) -> bool {
 	entity.position = target
 	entity.position_prev = position_prev
 	return true
+}
+
+world_is_in_bounds :: proc(pos: IVec2) -> bool {
+	return(
+		0 <= pos.x &&
+		pos.x < BOARD_WIDTH &&
+		0 <= pos.y &&
+		pos.y < BOARD_HEIGHT \
+	)
 }
