@@ -71,11 +71,13 @@ recv_package :: proc(socket: net.TCP_Socket, msg: $T) -> bool {
 
 	if (msg_bytes_read != size) {
 		log_red("Expected to receive", size, "bytes. Received", msg_bytes_read)
+		return false
 	}
 
 	unmarshal_err := json.unmarshal(buf, msg)
 	if unmarshal_err != nil {
 		log_red(unmarshal_err, "when unmarshaling", string(buf))
+		return false
 	}
 
 	log_green(string(buf))
