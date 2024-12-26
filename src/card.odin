@@ -215,7 +215,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			name = "Bomber",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
-			cost = 2,
+			cost = 3,
 			texture = entity_get_texture_color_agnostic(.bomber),
 			play = proc(
 				world: ^World,
