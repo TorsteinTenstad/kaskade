@@ -35,13 +35,26 @@ card_draw_gui :: proc(card: ^Physical_Card) {
 	rect := card_get_rect(card)
 	rl.DrawRectangleRounded(rect, 0.2, 8, rl.WHITE)
 	outline_color := card_get_outline_color(&card.card)
-	rl.DrawRectangleRoundedLines(rect, 0.2, 8, 8, outline_color)
+	rl.DrawRectangleRoundedLinesEx(rect, 0.2, 8, 4, outline_color)
 	text_position := FVec2{rect.x + rect.width * 0.1, rect.y + rect.height / 2}
+	mana_position := FVec2 {
+		rect.x + rect.width * 0.77,
+		rect.y + rect.height * 0.03,
+	}
+
 	draw_text(
 		card.card.name,
 		text_position,
 		size = 24 * card.scale,
 		color = rl.BLACK,
+		font = .nova_square_regular,
+	)
+
+	draw_text(
+		format(card.card.cost),
+		mana_position,
+		size = 36 * card.scale,
+		color = rl.BLUE,
 		font = .nova_square_regular,
 	)
 
