@@ -117,6 +117,13 @@ _main_step :: proc(ctx: ^Client_Context) {
 			)
 		}
 	}
+
+	if rl.IsKeyDown(.LEFT_CONTROL) && rl.IsKeyPressed(.MINUS) {
+		ctx.graphics.gui_scale += 0.25
+	}
+	if rl.IsKeyDown(.LEFT_CONTROL) && rl.IsKeyPressed(.SLASH) {
+		ctx.graphics.gui_scale -= 0.25
+	}
 }
 
 COLOR_BACKGROUND_DARK: rl.Color : {21, 18, 20, 255}

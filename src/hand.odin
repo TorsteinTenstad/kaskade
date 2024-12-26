@@ -30,6 +30,7 @@ Physical_Hand :: struct {
 }
 
 hand_step :: proc(ctx: ^Client_Context) {
+	card_size := ctx.graphics.gui_scale * FVec2{CARD_WIDTH, CARD_HEIGHT}
 	hand := &ctx.physical_hand
 
 	sorted_indices := sort_indices_by(
@@ -46,18 +47,18 @@ hand_step :: proc(ctx: ^Client_Context) {
 		if is_hovering && hover_index == i do continue
 
 		card := &hand.cards[i]
-		card.target_position = _card_position(i, len(hand.cards))
-		card.target_scale = 1
+		card.target_position = _card_position(i, len(hand.cards), card_size)
+		card.target_scale = 1 * ctx.graphics.gui_scale
 		card.z_index = 0
 
 		gui_size := camera_gui_size()
-		y_hand := gui_size[1] - CARD_HEIGHT * 1.5
+		y_hand := gui_size[1] - card_size[1] * 1.5
 		if hand.hover_is_selected || mouse_gui_position[1] < y_hand {
-			card.target_position[1] += CARD_HEIGHT
+			card.target_position[1] += card_size[1]
 		}
 
 		hoverable_rect := card_get_rect(card)
-		hoverable_rect.height += CARD_HEIGHT
+		hoverable_rect.height += card_size[1]
 		if !is_hovering &&
 		   linalg.distance(card.position, card.target_position) < 2 &&
 		   point_in_rect(mouse_gui_position, &hoverable_rect) {
@@ -70,13 +71,13 @@ hand_step :: proc(ctx: ^Client_Context) {
 		card.z_index = 1
 
 		if !hand.hover_is_selected {
-			card.target_scale = 1.5
+			card.target_scale = 1.5 * ctx.graphics.gui_scale
 			card.target_position =
-				_card_position(hover_index, len(hand.cards)) +
+				_card_position(hover_index, len(hand.cards), card_size) +
 				FVec2{0, -CARD_HEIGHT / 2}
 
 			hoverable_rect := card_get_rect(card)
-			hoverable_rect.height += CARD_HEIGHT
+			hoverable_rect.height += card_size[1]
 			mouse_in_rect := point_in_rect(mouse_gui_position, &hoverable_rect)
 			if !mouse_in_rect {
 				_hand_unhover(hand)
@@ -91,6 +92,7 @@ hand_step :: proc(ctx: ^Client_Context) {
 }
 
 hand_step_player :: proc(ctx: ^Client_Context) {
+	card_size := ctx.graphics.gui_scale * FVec2{CARD_WIDTH, CARD_HEIGHT}
 	hand := &ctx.physical_hand
 	world := &ctx.game_state.world
 	camera := &ctx.graphics.camera
@@ -108,9 +110,9 @@ hand_step_player :: proc(ctx: ^Client_Context) {
 		}
 
 		if hand.hover_is_selected {
-			card.target_scale = 2
+			card.target_scale = 2 * ctx.graphics.gui_scale
 			card.target_position =
-				mouse_gui_position + FVec2{CARD_WIDTH * 2, CARD_HEIGHT / 2}
+				mouse_gui_position + FVec2{card_size[0] * 2, card_size[1] / 2}
 			mouse_world_position := camera_world_mouse_position(camera)
 			hand.hover_target = mouse_world_position
 			if ctx.game_state.player_color == Piece_Color.black {
@@ -136,12 +138,12 @@ _hand_unhover :: proc(hand: ^Physical_Hand) {
 }
 
 @(private = "file")
-_card_position :: proc(i: int, n: int) -> FVec2 {
+_card_position :: proc(i: int, n: int, card_size: FVec2) -> FVec2 {
 	margin :: 32
 	gui_size := camera_gui_size()
-	origin := FVec2{gui_size.x / 2, gui_size.y - CARD_HEIGHT / 2 - margin}
-	width := f32(n) * (CARD_WIDTH + margin)
-	offset := FVec2{f32(i) * (CARD_WIDTH + margin) - width / 2, 0}
+	origin := FVec2{gui_size.x / 2, gui_size.y - card_size[1] / 2 - margin}
+	width := f32(n) * (card_size[0] + margin)
+	offset := FVec2{f32(i) * (card_size[0] + margin) - width / 2, 0}
 	return origin + offset
 }
 

@@ -10,6 +10,7 @@ Graphics :: struct {
 	fonts:          map[Font_Id]rl.Font,
 	surface:        rl.RenderTexture2D,
 	camera:         Camera,
+	gui_scale:      f32,
 }
 
 Sprite_Id :: enum {
@@ -70,6 +71,7 @@ graphics_create :: proc(ctx: ^Client_Context) {
 		BOARD_WIDTH / 2,
 		BOARD_HEIGHT / 2 + 0.5,
 	}
+	ctx.graphics.gui_scale = 1.0
 }
 
 @(private = "file")
