@@ -29,6 +29,11 @@ Entity :: struct {
 	triggers_twice: bool,
 }
 
+Texture_Color_Agnostic :: struct {
+	black: rl.Texture2D,
+	white: rl.Texture2D,
+}
+
 entity_direction_x :: proc(color: Piece_Color) -> IVec2 {
 	if color == .black {
 		return IVec2{-1, 0}
@@ -151,9 +156,20 @@ entity_draw :: proc(entity: ^Entity) {
 }
 
 entity_get_texture :: proc(entity: ^Entity) -> rl.Texture2D {
+	texture := entity_get_texture_color_agnostic(entity.kind)
+	if entity.color == Piece_Color.black {
+		return texture.black
+	} else {
+		return texture.white
+	}
+}
+
+entity_get_texture_color_agnostic :: proc(
+	kind: Entity_Kind,
+) -> Texture_Color_Agnostic {
 	// is_moving :=
 	// 	entity.position_draw.x - math.floor(entity.position_draw.x) != 0 ||
 	// 	entity.position_draw.y - math.floor(entity.position_draw.y) != 0
 	ctx := get_context()
-	return ctx.graphics.sprites_pieces[entity.color][entity.kind]
+	return ctx.graphics.sprites_pieces[kind]
 }

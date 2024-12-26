@@ -6,7 +6,7 @@ import rl "vendor:raylib"
 
 Graphics :: struct {
 	sprites:        map[Sprite_Id]rl.Texture,
-	sprites_pieces: map[Piece_Color]map[Entity_Kind]rl.Texture,
+	sprites_pieces: map[Entity_Kind]Texture_Color_Agnostic,
 	fonts:          map[Font_Id]rl.Font,
 	surface:        rl.RenderTexture2D,
 	camera:         Camera,
@@ -53,12 +53,7 @@ graphics_create :: proc(ctx: ^Client_Context) {
 	}
 
 	ctx.graphics.sprites = _load_sprites()
-	ctx.graphics.sprites_pieces[Piece_Color.black] = _load_sprites_pieces(
-		Piece_Color.black,
-	)
-	ctx.graphics.sprites_pieces[Piece_Color.white] = _load_sprites_pieces(
-		Piece_Color.white,
-	)
+	ctx.graphics.sprites_pieces = _load_sprites_pieces()
 	ctx.graphics.fonts = _load_fonts()
 	rl.GuiSetFont(ctx.graphics.fonts[Font_Id.lilita_one_regular])
 
@@ -92,21 +87,33 @@ _load_sprites :: proc() -> map[Sprite_Id]rl.Texture {
 }
 
 @(private = "file")
-_load_sprites_pieces :: proc(
-	color: Piece_Color,
-) -> map[Entity_Kind]rl.Texture {
-	m := make(map[Entity_Kind]rl.Texture)
+_load_sprites_pieces :: proc() -> map[Entity_Kind]Texture_Color_Agnostic {
+	m := make(map[Entity_Kind]Texture_Color_Agnostic)
 
 	for sprite_id in Entity_Kind {
 		sprites_path := "sprites/pieces/"
-		color_path := color == Piece_Color.black ? "pink/" : "green/"
-		full_path := strings.concatenate(
-			{ASSETS_PATH, sprites_path, color_path, format(sprite_id), ".png"},
+		texture: Texture_Color_Agnostic
+
+		path_black := strings.concatenate(
+			{ASSETS_PATH, sprites_path, "pink/", format(sprite_id), ".png"},
 		)
-		texture := rl.LoadTexture(cstr(full_path))
-		if texture.id == 0 {
-			log_red("Could not find sprite", full_path)
+		texture_black := rl.LoadTexture(cstr(path_black))
+		if texture_black.id == 0 {
+			log_red("Could not find sprite", path_black)
+		} else {
+			texture.black = texture_black
 		}
+
+		path_white := strings.concatenate(
+			{ASSETS_PATH, sprites_path, "green/", format(sprite_id), ".png"},
+		)
+		texture_white := rl.LoadTexture(cstr(path_white))
+		if texture_white.id == 0 {
+			log_red("Could not find sprite", path_white)
+		} else {
+			texture.white = texture_white
+		}
+
 		m[sprite_id] = texture
 	}
 	return m

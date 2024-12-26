@@ -28,6 +28,7 @@ Card :: struct {
 	description: string,
 	kind:        Card_Kind,
 	cost:        int,
+	texture:     Texture_Color_Agnostic,
 	play:        proc(_: ^World, _: Piece_Color, _: IVec2) -> bool,
 }
 
@@ -66,6 +67,16 @@ card_draw_gui :: proc(card: ^Physical_Card) {
 		color = rl.BLACK,
 		font = .nova_square_regular,
 	)
+
+	ctx := get_context()
+	image_position := FVec2 {
+		rect.x + rect.width * 0.1,
+		rect.y + rect.height * 0.1,
+	}
+	texture :=
+		ctx.game_state.player_color == Piece_Color.black ? card.card.texture.black : card.card.texture.white
+	image_scale := 4 * card.scale
+	rl.DrawTextureEx(texture, image_position, 0, image_scale, rl.WHITE)
 }
 
 card_get_outline_color :: proc(card: ^Card) -> rl.Color {
@@ -100,6 +111,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			kind = Card_Kind.piece,
 			description = "TODO: description",
 			cost = 1,
+			texture = entity_get_texture_color_agnostic(.squire),
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
@@ -125,6 +137,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			kind = Card_Kind.piece,
 			description = "TODO: description",
 			cost = 2,
+			texture = entity_get_texture_color_agnostic(.knight),
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
@@ -150,6 +163,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			kind = Card_Kind.piece,
 			description = "TODO: description",
 			cost = 3,
+			texture = entity_get_texture_color_agnostic(.ranger),
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
@@ -176,6 +190,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			kind = Card_Kind.piece,
 			description = "TODO: description",
 			cost = 3,
+			texture = entity_get_texture_color_agnostic(.swordsman),
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
@@ -202,6 +217,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			kind = Card_Kind.piece,
 			description = "TODO: description",
 			cost = 4,
+			texture = entity_get_texture_color_agnostic(.bomber),
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
@@ -227,6 +243,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			kind = Card_Kind.piece,
 			description = "TODO: description",
 			cost = 4,
+			texture = entity_get_texture_color_agnostic(.king),
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
