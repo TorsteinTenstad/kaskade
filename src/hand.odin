@@ -116,6 +116,8 @@ hand_step_player :: proc(ctx: ^Client_Context) {
 			if ctx.game_state.player_color == Piece_Color.black {
 				mouse_world_position.y =
 					BOARD_HEIGHT - mouse_world_position.y - 1
+				mouse_world_position.x =
+					BOARD_WIDTH - mouse_world_position.x - 1
 			}
 
 			if rl.IsMouseButtonReleased(.LEFT) {

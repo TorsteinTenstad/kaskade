@@ -180,6 +180,8 @@ _main_draw :: proc(ctx: ^Client_Context) {
 			if ctx.game_state.player_color == Piece_Color.black {
 				entity.position_draw.y =
 					BOARD_HEIGHT - entity.position_draw.y - 1
+				entity.position_draw.x =
+					BOARD_WIDTH - entity.position_draw.x - 1
 			}
 			entity_draw(&entity)
 		}
