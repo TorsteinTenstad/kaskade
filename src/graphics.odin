@@ -69,7 +69,10 @@ graphics_create :: proc(ctx: ^Client_Context) {
 		SURFACE_WIDTH / GRID_SIZE,
 		SURFACE_HEIGHT / GRID_SIZE,
 	}
-	ctx.graphics.camera.target_position = {BOARD_WIDTH / 2, BOARD_HEIGHT / 2}
+	ctx.graphics.camera.target_position = {
+		BOARD_WIDTH / 2,
+		BOARD_HEIGHT / 2 + 0.5,
+	}
 }
 
 @(private = "file")
