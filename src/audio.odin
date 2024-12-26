@@ -14,9 +14,9 @@ Audio :: struct {
 }
 
 Audio_Paths := [Audio_Id]string {
-	.move      = "move.wav",
-	.capture   = "move.wav",
-	.your_turn = "your_turn.wav",
+	.move      = "sounds/move.wav",
+	.capture   = "sounds/move.wav",
+	.your_turn = "sounds/your_turn.wav",
 }
 
 audio_load :: proc(audio: ^Audio) {

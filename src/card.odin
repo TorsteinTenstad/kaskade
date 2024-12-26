@@ -5,10 +5,10 @@ import "core:math/linalg"
 import rl "vendor:raylib"
 
 Card_Id :: enum {
-	pawn,
+	squire,
 	knight,
-	bishop,
-	rook,
+	ranger,
+	swordsman,
 	queen,
 	king,
 	haste,
@@ -80,9 +80,9 @@ card_get_rect :: proc(card: ^Physical_Card) -> rl.Rectangle {
 
 card_get :: proc(card_id: Card_Id) -> Card {
 	switch card_id {
-	case .pawn:
+	case .squire:
 		return Card {
-			id = .pawn,
+			id = .squire,
 			name = "Pawn",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
@@ -96,7 +96,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 					player_try_place_entity(
 						world,
 						Entity {
-							kind = .pawn,
+							kind = .squire,
 							color = color,
 							position = position,
 						},
@@ -130,9 +130,9 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				)
 			},
 		}
-	case .bishop:
+	case .ranger:
 		return Card {
-			id = .bishop,
+			id = .ranger,
 			name = "Bishop",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
@@ -146,7 +146,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 					player_try_place_entity(
 						world,
 						Entity {
-							kind = .bishop,
+							kind = .ranger,
 							color = color,
 							capturing = true,
 							position = position,
@@ -156,9 +156,9 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				)
 			},
 		}
-	case .rook:
+	case .swordsman:
 		return Card {
-			id = .rook,
+			id = .swordsman,
 			name = "Rook",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
@@ -172,7 +172,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 					player_try_place_entity(
 						world,
 						Entity {
-							kind = .rook,
+							kind = .swordsman,
 							capturing = true,
 							color = color,
 							position = position,
@@ -198,7 +198,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 					player_try_place_entity(
 						world,
 						Entity {
-							kind = .queen,
+							kind = .bomber,
 							color = color,
 							position = position,
 						},

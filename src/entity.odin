@@ -4,12 +4,12 @@ package main
 import rl "vendor:raylib"
 
 Entity_Kind :: enum {
-	pawn,
+	squire,
 	knight,
-	bishop,
-	rook,
-	queen,
+	ranger,
+	swordsman,
 	king,
+	bomber,
 }
 
 Piece_Color :: enum {
@@ -46,7 +46,7 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 	dir_y := entity_direction_y(entity.color)
 
 	switch entity.kind {
-	case .pawn:
+	case .squire:
 		world_try_move_entity(world, entity, entity.position + dir_y)
 	case .knight:
 		position_prev := entity.position
@@ -69,7 +69,7 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 		if entity.position != position_prev {
 			entity.position_prev = position_prev
 		}
-	case .bishop:
+	case .ranger:
 		directions: []IVec2 = {
 			dir_x + dir_y,
 			-dir_x + dir_y,
@@ -89,9 +89,9 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 				}
 			}
 		}
-	case .rook:
+	case .swordsman:
 		world_try_move_entity(world, entity, entity.position + dir_y)
-	case .queen:
+	case .bomber:
 	case .king:
 		world_try_move_entity(world, entity, entity.position + dir_y)
 	}
@@ -105,7 +105,7 @@ entity_step :: proc(ctx: ^Client_Context, entity: ^Entity) {
 	entity.position_draw = move_towards(
 		entity.position_draw,
 		f_vec_2(entity.position),
-		0.25,
+		0.1,
 	)
 
 	if entity.position_draw == f_vec_2(entity.position) {
@@ -132,8 +132,7 @@ select_next_entity :: proc(ctx: ^Client_Context) {
 
 entity_draw :: proc(entity: ^Entity) {
 	graphics := &get_context().graphics
-	sprite_id := entity_get_sprite_id(entity)
-	texture := graphics.sprites[sprite_id]
+	texture := entity_get_texture(entity)
 	surface_position := camera_world_to_surface(
 		&graphics.camera,
 		entity.position_draw,
@@ -149,23 +148,10 @@ entity_draw :: proc(entity: ^Entity) {
 	}
 }
 
-entity_get_sprite_id :: proc(entity: ^Entity) -> Sprite_Id {
-	is_white := entity.color == Piece_Color.white
-
-	switch entity.kind {
-	case .pawn:
-		return is_white ? Sprite_Id.pawn_w : Sprite_Id.pawn_b
-	case .knight:
-		return is_white ? Sprite_Id.knight_w : Sprite_Id.knight_b
-	case .bishop:
-		return is_white ? Sprite_Id.bishop_w : Sprite_Id.bishop_b
-	case .rook:
-		return is_white ? Sprite_Id.rook_w : Sprite_Id.rook_b
-	case .king:
-		return is_white ? Sprite_Id.king_w : Sprite_Id.king_b
-	case .queen:
-		return is_white ? Sprite_Id.queen_w : Sprite_Id.queen_b
-	}
-	assert(false, "non-exhaustive")
-	return Sprite_Id.player
+entity_get_texture :: proc(entity: ^Entity) -> rl.Texture2D {
+	// is_moving :=
+	// 	entity.position_draw.x - math.floor(entity.position_draw.x) != 0 ||
+	// 	entity.position_draw.y - math.floor(entity.position_draw.y) != 0
+	ctx := get_context()
+	return ctx.graphics.sprites_pieces[entity.color][entity.kind]
 }

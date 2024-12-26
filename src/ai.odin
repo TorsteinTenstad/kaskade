@@ -66,7 +66,7 @@ ai_do_action :: proc(
 	// Check for good give arms target
 	if game_state.mana >= 3 {
 		for &entity in game_state.world.entities {
-			if entity.kind != Entity_Kind.pawn do continue
+			if entity.kind != Entity_Kind.squire do continue
 			if entity.color != game_state.player_color do continue
 			if entity.capturing do continue
 			if world_is_empty(&game_state.world, entity.position + entity_direction_y(entity.color)) do continue
@@ -79,11 +79,11 @@ ai_do_action :: proc(
 		}
 	}
 
-	// Play a random pawn
+	// Play a random squire
 	if game_state.mana >= 1 {
 		card_idx := hand_find_card(
 			&game_state.hand,
-			Card_Id.pawn,
+			Card_Id.squire,
 		).(int) or_return
 
 		target: IVec2
