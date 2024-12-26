@@ -15,11 +15,13 @@ Graphics :: struct {
 Sprite_Id :: enum {
 	icon_capturing,
 	icon_haste,
+	icon_exhausted,
 }
 
 _sprite_paths := [Sprite_Id]string {
 	.icon_capturing = "sprites/icons/capturing.png",
 	.icon_haste     = "sprites/icons/haste.png",
+	.icon_exhausted = "sprites/icons/exhausted.png",
 }
 
 Font_Id :: enum {

@@ -254,18 +254,10 @@ game_update_from_message :: proc(
 
 		for id in entity_ids {
 			entity := world_get_entity(world, id).(^Entity) or_continue
+			entity.exhausted_for_turns = max(0, entity.exhausted_for_turns - 1)
 			if entity.color != game_state.active_color do continue
-
-			triggers_twice := entity.triggers_twice
-			entity.triggers_twice = false
+			if entity.exhausted_for_turns > 0 do continue
 			entity_run_action(world, entity)
-
-			if triggers_twice {
-				entity = world_get_entity(world, id).(^Entity) or_continue
-				if entity.color != game_state.active_color do continue
-
-				entity_run_action(world, entity)
-			}
 		}
 
 		// Update max mana

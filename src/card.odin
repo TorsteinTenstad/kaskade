@@ -11,7 +11,7 @@ Card_Id :: enum {
 	swordsman,
 	bomber,
 	king,
-	haste,
+	adrenaline,
 	give_arms,
 	halt,
 }
@@ -215,7 +215,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			name = "Bomber",
 			kind = Card_Kind.piece,
 			description = "TODO: description",
-			cost = 3,
+			cost = 2,
 			texture = entity_get_texture_color_agnostic(.bomber),
 			play = proc(
 				world: ^World,
@@ -261,12 +261,12 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				)
 			},
 		}
-	case .haste:
+	case .adrenaline:
 		return Card {
-			id = .haste,
-			name = "Haste",
+			id = .adrenaline,
+			name = "Adrenaline",
 			kind = Card_Kind.spell,
-			description = "Chosen piece triggers twice",
+			description = "Trigger a piece twice. It won't trigger until the start of your next turn",
 			cost = 2,
 			play = proc(
 				world: ^World,
@@ -274,7 +274,18 @@ card_get :: proc(card_id: Card_Id) -> Card {
 				position: IVec2,
 			) -> bool {
 				entity := world_get_entity(world, position).(^Entity) or_return
-				entity.triggers_twice = true
+				entity_id := entity.id
+				entity.exhausted_for_turns = 2
+				entity_run_action(world, entity)
+
+				entity_fresh_ptr, not_dead := world_get_entity(
+					world,
+					entity_id,
+				).(^Entity)
+				if not_dead {
+					entity_run_action(world, entity_fresh_ptr)
+				}
+
 				return true
 			},
 		}

@@ -19,14 +19,14 @@ Piece_Color :: enum {
 }
 
 Entity :: struct {
-	id:             int,
-	kind:           Entity_Kind,
-	color:          Piece_Color,
-	position:       IVec2,
-	position_prev:  IVec2,
-	position_draw:  FVec2,
-	capturing:      bool,
-	triggers_twice: bool,
+	id:                  int,
+	kind:                Entity_Kind,
+	color:               Piece_Color,
+	position:            IVec2,
+	position_prev:       IVec2,
+	position_draw:       FVec2,
+	capturing:           bool,
+	exhausted_for_turns: int,
 }
 
 Texture_Color_Agnostic :: struct {
@@ -99,7 +99,6 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 		world_try_move_entity(world, entity, entity.position + dir_y)
 	case .bomber:
 		for world_try_move_entity(world, entity, entity.position + dir_y) {}
-		world_remove_entity(world, entity.id)
 		world_add_entity(
 			world,
 			Entity {
@@ -110,6 +109,7 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 				position_draw = f_vec_2(entity.position),
 			},
 		)
+		world_remove_entity(world, entity.id)
 	case .bomb:
 		entity_ids := world_get_entity_ids(world)
 		defer delete(entity_ids)
@@ -172,9 +172,9 @@ entity_draw :: proc(entity: ^Entity) {
 		texture_capturing := graphics.sprites[Sprite_Id.icon_capturing]
 		rl.DrawTextureEx(texture_capturing, surface_position, 0, 1.0, rl.WHITE)
 	}
-	if entity.triggers_twice {
-		texture_haste := graphics.sprites[Sprite_Id.icon_haste]
-		rl.DrawTextureEx(texture_haste, surface_position, 0, 1.0, rl.WHITE)
+	if entity.exhausted_for_turns > 0 {
+		texture_exhausted := graphics.sprites[Sprite_Id.icon_exhausted]
+		rl.DrawTextureEx(texture_exhausted, surface_position, 0, 1.0, rl.WHITE)
 	}
 }
 
