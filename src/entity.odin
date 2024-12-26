@@ -10,6 +10,7 @@ Entity_Kind :: enum {
 	swordsman,
 	king,
 	bomber,
+	bomb,
 }
 
 Piece_Color :: enum {
@@ -91,6 +92,7 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 		}
 	case .swordsman:
 		world_try_move_entity(world, entity, entity.position + dir_y)
+	case .bomb:
 	case .bomber:
 	case .king:
 		world_try_move_entity(world, entity, entity.position + dir_y)
