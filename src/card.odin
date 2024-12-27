@@ -4,7 +4,7 @@ import "core:math"
 import "core:math/linalg"
 import rl "vendor:raylib"
 
-Card_Id :: enum {
+Card_Kind :: enum {
 	squire,
 	knight,
 	ranger,
@@ -16,16 +16,21 @@ Card_Id :: enum {
 	halt,
 }
 
-Card_Kind :: enum {
+Card_Category :: enum {
 	piece,
 	spell,
 }
 
+Card_Handle :: struct {
+	id:   u64,
+	kind: Card_Kind,
+}
+
 Card :: struct {
-	id:          Card_Id,
+	kind:        Card_Kind,
 	name:        string,
 	description: string,
-	kind:        Card_Kind,
+	category:    Card_Category,
 	cost:        int,
 	texture:     Texture_Color_Agnostic,
 	play:        proc(_: ^World, _: Piece_Color, _: IVec2) -> bool,
@@ -82,7 +87,7 @@ card_draw_gui :: proc(card: ^Physical_Card) {
 }
 
 card_get_outline_color :: proc(card: ^Card) -> rl.Color {
-	switch card.kind {
+	switch card.category {
 	case .piece:
 		return rl.BLACK
 	case .spell:
@@ -104,13 +109,13 @@ card_get_rect :: proc(card: ^Physical_Card) -> rl.Rectangle {
 	}
 }
 
-card_get :: proc(card_id: Card_Id) -> Card {
+card_get :: proc(card_id: Card_Kind) -> Card {
 	switch card_id {
 	case .squire:
 		return Card {
-			id = .squire,
+			kind = .squire,
 			name = "Squire",
-			kind = Card_Kind.piece,
+			category = Card_Category.piece,
 			description = "Moves forward",
 			cost = 1,
 			texture = entity_get_texture_color_agnostic(.squire),
@@ -134,9 +139,9 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		}
 	case .knight:
 		return Card {
-			id = .knight,
+			kind = .knight,
 			name = "Knight",
-			kind = Card_Kind.piece,
+			category = Card_Category.piece,
 			description = "Moves forward,\nthen forward diagonally\nuntil there is no piece\ndirectly in front",
 			cost = 2,
 			texture = entity_get_texture_color_agnostic(.knight),
@@ -160,9 +165,9 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		}
 	case .ranger:
 		return Card {
-			id = .ranger,
+			kind = .ranger,
 			name = "Ranger",
-			kind = Card_Kind.piece,
+			category = Card_Category.piece,
 			description = "@Capturing\nIf an enemy piece\nis visible on a diagonal,\ncapture it",
 			cost = 3,
 			texture = entity_get_texture_color_agnostic(.ranger),
@@ -187,9 +192,9 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		}
 	case .swordsman:
 		return Card {
-			id = .swordsman,
+			kind = .swordsman,
 			name = "Swordsman",
-			kind = Card_Kind.piece,
+			category = Card_Category.piece,
 			description = "@Capturing\nMoves forward",
 			cost = 3,
 			texture = entity_get_texture_color_agnostic(.swordsman),
@@ -214,9 +219,9 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		}
 	case .bomber:
 		return Card {
-			id = .bomber,
+			kind = .bomber,
 			name = "Bomber",
-			kind = Card_Kind.piece,
+			category = Card_Category.piece,
 			description = "Moves forward as far\nas it can before placing\na bomb and fleeing.\nBombs explode,\ndestroying all pieces\nin a 3x3 area",
 			cost = 3,
 			texture = entity_get_texture_color_agnostic(.bomber),
@@ -240,9 +245,9 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		}
 	case .king:
 		return Card {
-			id = .king,
+			kind = .king,
 			name = "King",
-			kind = Card_Kind.piece,
+			category = Card_Category.piece,
 			description = "Moves forward\nAllows spawning pieces\nin a 3x3 area around it",
 			cost = 4,
 			texture = entity_get_texture_color_agnostic(.king),
@@ -266,9 +271,9 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		}
 	case .adrenaline:
 		return Card {
-			id = .adrenaline,
+			kind = .adrenaline,
 			name = "Adrenaline",
-			kind = Card_Kind.spell,
+			category = Card_Category.spell,
 			description = "Trigger a piece twice.\nIt won't trigger until\nthe start of your\nnext turn",
 			cost = 2,
 			texture = get_texture_as_agnostic(.adrenaline),
@@ -295,9 +300,9 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		}
 	case .give_arms:
 		return Card {
-			id = .give_arms,
+			kind = .give_arms,
 			name = "Give Arms",
-			kind = Card_Kind.spell,
+			category = Card_Category.spell,
 			description = "Give a piece the ability to capture",
 			cost = 3,
 			texture = get_texture_as_agnostic(.give_arms),
@@ -315,9 +320,9 @@ card_get :: proc(card_id: Card_Id) -> Card {
 		}
 	case .halt:
 		return Card {
-			id = .halt,
+			kind = .halt,
 			name = "Halt",
-			kind = Card_Kind.spell,
+			category = Card_Category.spell,
 			description = "Move a piece to\nits previous position",
 			cost = 1,
 			texture = get_texture_as_agnostic(.halt),

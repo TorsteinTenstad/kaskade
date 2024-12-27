@@ -308,15 +308,19 @@ game_update_from_message :: proc(
 	card_action, is_card_action := msg.card_action.(Card_Action)
 	if is_card_action {
 		if card_action.card_idx < len(player.hand.cards) {
-			card_id := player.hand.cards[card_action.card_idx]
-			card := card_get(card_id)
+			card_handle := player.hand.cards[card_action.card_idx]
+			card := card_get(card_handle.kind)
 			if card.cost <= player.mana {
 				if card.play(
 					&game_state.world,
 					player.color,
 					card_action.target,
 				) {
-					log_magenta(game_state.active_color, "played", card_id)
+					log_magenta(
+						game_state.active_color,
+						"played",
+						card_handle.kind,
+					)
 					player.mana -= card.cost
 					ordered_remove(&player.hand.cards, card_action.card_idx)
 				}

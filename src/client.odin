@@ -108,31 +108,38 @@ game_state_apply_incoming :: proc(ctx: ^Client_Context) -> bool {
 	ctx.game_state = game_state_incoming
 	ctx.game_state_incoming = nil
 
-	cards_equal :=
-		len(ctx.physical_hand.cards) == len(ctx.game_state.hand.cards)
-
-	if cards_equal {
-		for i in 0 ..< len(ctx.physical_hand.cards) {
-			if ctx.physical_hand.cards[i].card.id !=
-			   ctx.game_state.hand.cards[i] {
-				cards_equal = false
+	for i := len(ctx.physical_hand.cards) - 1; i >= 0; i -= 1 {
+		physical_card := &ctx.physical_hand.cards[i]
+		found := false
+		for card_handle in ctx.game_state.hand.cards {
+			if physical_card.id == card_handle.id {
+				found = true
 				break
 			}
 		}
+		if !found {
+			hand_unhover(&ctx.physical_hand)
+			ordered_remove(&ctx.physical_hand.cards, i)
+		}
 	}
 
-	if !cards_equal {
-		clear(&ctx.physical_hand.cards)
-
-		for card_id in ctx.game_state.hand.cards {
+	for card_handle in ctx.game_state.hand.cards {
+		found := false
+		for physical_card in ctx.physical_hand.cards {
+			if physical_card.id == card_handle.id {
+				found = true
+				break
+			}
+		}
+		if !found {
 			append(
 				&ctx.physical_hand.cards,
-				Physical_Card{card = card_get(card_id)},
+				Physical_Card {
+					id = card_handle.id,
+					card = card_get(card_handle.kind),
+				},
 			)
 		}
-		ctx.physical_hand.hover_index = nil
-		ctx.physical_hand.hover_is_selected = false
-		ctx.physical_hand.hover_target = nil
 	}
 
 	return true

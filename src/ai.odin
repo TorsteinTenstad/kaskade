@@ -37,9 +37,9 @@ ai_run :: proc(server_ip: net.IP4_Address) {
 	}
 }
 
-hand_find_card :: proc(hand: ^Hand, card_id: Card_Id) -> Maybe(int) {
+hand_find_card :: proc(hand: ^Hand, card_kind: Card_Kind) -> Maybe(int) {
 	for c, idx in hand.cards {
-		if c == card_id do return idx
+		if c.kind == card_kind do return idx
 	}
 	return nil
 }
@@ -68,7 +68,7 @@ ai_do_action :: proc(
 			if world_is_empty(&game_state.world, entity.position + entity_direction_y(entity.color)) do continue
 			card_idx := hand_find_card(
 				&game_state.hand,
-				Card_Id.give_arms,
+				Card_Kind.give_arms,
 			).(int) or_continue
 			play(ctx, card_idx, entity.position)
 			return true
@@ -79,7 +79,7 @@ ai_do_action :: proc(
 	if game_state.mana >= 1 {
 		card_idx := hand_find_card(
 			&game_state.hand,
-			Card_Id.squire,
+			Card_Kind.squire,
 		).(int) or_return
 
 		target: IVec2

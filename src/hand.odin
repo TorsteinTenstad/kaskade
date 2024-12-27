@@ -6,6 +6,7 @@ import "core:math/rand"
 import rl "vendor:raylib"
 
 Physical_Card :: struct {
+	id:              u64,
 	card:            Card,
 	position:        FVec2,
 	scale:           f32,
@@ -15,11 +16,11 @@ Physical_Card :: struct {
 }
 
 Deck :: struct {
-	cards: [dynamic]Card_Id,
+	cards: [dynamic]Card_Kind,
 }
 
 Hand :: struct {
-	cards: [dynamic]Card_Id,
+	cards: [dynamic]Card_Handle,
 }
 
 Physical_Hand :: struct {
@@ -80,7 +81,7 @@ hand_step :: proc(ctx: ^Client_Context) {
 			hoverable_rect.height += card_size[1]
 			mouse_in_rect := point_in_rect(mouse_gui_position, &hoverable_rect)
 			if !mouse_in_rect {
-				_hand_unhover(hand)
+				hand_unhover(hand)
 			}
 		}
 	}
@@ -106,7 +107,7 @@ hand_step_player :: proc(ctx: ^Client_Context) {
 			hand.hover_is_selected = true
 		}
 		if rl.IsMouseButtonPressed(.RIGHT) {
-			_hand_unhover(hand)
+			hand_unhover(hand)
 		}
 
 		if hand.hover_is_selected {
@@ -123,15 +124,14 @@ hand_step_player :: proc(ctx: ^Client_Context) {
 			}
 
 			if rl.IsMouseButtonReleased(.LEFT) {
+				hand_unhover(hand)
 				hand_play(ctx, hover_index, world, mouse_world_position)
-				_hand_unhover(hand)
 			}
 		}
 	}
 }
 
-@(private = "file")
-_hand_unhover :: proc(hand: ^Physical_Hand) {
+hand_unhover :: proc(hand: ^Physical_Hand) {
 	hand.hover_index = nil
 	hand.hover_target = nil
 	hand.hover_is_selected = false
@@ -168,8 +168,8 @@ hand_draw_from_deck :: proc(hand: ^Hand, deck: ^Deck) -> bool {
 	if len(hand.cards) >= CARDS_MAX do return false
 	if len(deck.cards) == 0 do return false
 
-	card := pop(&deck.cards)
-	append(&hand.cards, card)
+	card_kind := pop(&deck.cards)
+	append(&hand.cards, Card_Handle{kind = card_kind, id = rand.uint64()})
 	return true
 }
 
@@ -216,7 +216,7 @@ deck_random :: proc() -> Deck {
 	deck: Deck
 
 	for _ in 0 ..< 10 {
-		for card_id in Card_Id {
+		for card_id in Card_Kind {
 			if rand.int_max(2) > 0 {
 				append(&deck.cards, card_id)
 			}
