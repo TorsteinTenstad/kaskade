@@ -184,7 +184,12 @@ world_try_move_entity :: proc(
 		can_capture := entity.capturing && other_entity.color != entity.color
 		if !can_capture do return false
 		world_move_entity(world, entity, target)
+		poisonous := other_entity.poisonous
+		entity_id := entity.id
 		world_remove_entity(world, other_entity)
+		if poisonous {
+			world_remove_entity(world, entity_id)
+		}
 		return true
 	} else {
 		world_move_entity(world, entity, target)

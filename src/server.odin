@@ -106,7 +106,7 @@ game_start :: proc(ctx: ^Server_Context) {
 		if player_id in ctx.decks {
 			player.deck = ctx.decks[player_id]
 		}
-		for _ in 0 ..< CARDS_MAX {
+		for _ in 0 ..< CARDS_STARTING {
 			hand_draw_from_deck(&player.hand, &player.deck)
 		}
 		if game_state.white.id == 0 {
@@ -243,8 +243,11 @@ game_update_from_message :: proc(
 	_, is_end_turn := msg.end_turn.(End_Turn)
 	if is_end_turn {
 		// Draw cards
-		for len(player.hand.cards) < CARDS_MAX && len(player.deck.cards) > 0 {
-			hand_draw_from_deck(&player.hand, &player.deck)
+		for _ in 0 ..< CARDS_DRAWN {
+			if len(player.hand.cards) < CARDS_MAX &&
+			   len(player.deck.cards) > 0 {
+				hand_draw_from_deck(&player.hand, &player.deck)
+			}
 		}
 
 		// Move pieces

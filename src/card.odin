@@ -14,6 +14,7 @@ Card_Kind :: enum {
 	adrenaline,
 	give_arms,
 	halt,
+	poisonous_bush,
 }
 
 Card_Category :: enum {
@@ -339,6 +340,33 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 					entity.position_prev,
 				)
 				return ok
+			},
+		}
+	case .poisonous_bush:
+		return Card {
+			kind = .poisonous_bush,
+			name = "Poisonous Bush",
+			category = Card_Category.piece,
+			description = "Does not move\nPieces that capture it\nare destroyed",
+			cost = 1,
+			texture = entity_get_texture_color_agnostic(.poisonous_bush),
+			play = proc(
+				world: ^World,
+				color: Piece_Color,
+				position: IVec2,
+			) -> bool {
+				return(
+					player_try_place_entity(
+						world,
+						Entity {
+							kind = .poisonous_bush,
+							color = color,
+							poisonous = true,
+							position = position,
+						},
+					) !=
+					nil \
+				)
 			},
 		}
 	}

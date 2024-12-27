@@ -11,6 +11,7 @@ Entity_Kind :: enum {
 	king,
 	bomber,
 	bomb,
+	poisonous_bush,
 }
 
 Piece_Color :: enum {
@@ -26,6 +27,7 @@ Entity :: struct {
 	position_prev:       IVec2,
 	position_draw:       FVec2,
 	capturing:           bool,
+	poisonous:           bool,
 	exhausted_for_turns: int,
 }
 
@@ -124,6 +126,7 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 		}
 	case .king:
 		world_try_move_entity(world, entity, entity.position + dir_y)
+	case .poisonous_bush:
 	}
 }
 
