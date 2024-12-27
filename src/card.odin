@@ -36,7 +36,10 @@ card_draw_gui :: proc(card: ^Physical_Card) {
 	rl.DrawRectangleRounded(rect, 0.2, 8, rl.WHITE)
 	outline_color := card_get_outline_color(&card.card)
 	rl.DrawRectangleRoundedLinesEx(rect, 0.2, 8, 4, outline_color)
-	text_position := FVec2{rect.x + rect.width * 0.1, rect.y + rect.height / 2}
+	text_position := FVec2 {
+		rect.x + rect.width * 0.1,
+		rect.y + rect.height * 0.4,
+	}
 	mana_position := FVec2 {
 		rect.x + rect.width * 0.77,
 		rect.y + rect.height * 0.03,
@@ -58,11 +61,11 @@ card_draw_gui :: proc(card: ^Physical_Card) {
 		font = .nova_square_regular,
 	)
 
-	description_position := text_position + FVec2{0, 32} * card.scale
+	description_position := text_position + FVec2{-4, 32} * card.scale
 	draw_text(
 		card.card.description,
 		description_position,
-		size = 16 * card.scale,
+		size = 12 * card.scale,
 		color = rl.BLACK,
 		font = .nova_square_regular,
 	)
@@ -70,7 +73,7 @@ card_draw_gui :: proc(card: ^Physical_Card) {
 	ctx := get_context()
 	image_position := FVec2 {
 		rect.x + rect.width * 0.1,
-		rect.y + rect.height * 0.1,
+		rect.y + rect.height * 0.03,
 	}
 	texture :=
 		ctx.game_state.player_color == Piece_Color.black ? card.card.texture.black : card.card.texture.white
@@ -108,7 +111,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			id = .squire,
 			name = "Squire",
 			kind = Card_Kind.piece,
-			description = "TODO: description",
+			description = "Moves forward",
 			cost = 1,
 			texture = entity_get_texture_color_agnostic(.squire),
 			play = proc(
@@ -134,7 +137,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			id = .knight,
 			name = "Knight",
 			kind = Card_Kind.piece,
-			description = "TODO: description",
+			description = "Moves forward,\nthen forward diagonally\nuntil there is no piece\ndirectly in front",
 			cost = 2,
 			texture = entity_get_texture_color_agnostic(.knight),
 			play = proc(
@@ -160,7 +163,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			id = .ranger,
 			name = "Ranger",
 			kind = Card_Kind.piece,
-			description = "TODO: description",
+			description = "@Capturing\nIf an enemy piece\nis visible on a diagonal,\ncapture it",
 			cost = 3,
 			texture = entity_get_texture_color_agnostic(.ranger),
 			play = proc(
@@ -187,7 +190,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			id = .swordsman,
 			name = "Swordsman",
 			kind = Card_Kind.piece,
-			description = "TODO: description",
+			description = "@Capturing\nMoves forward",
 			cost = 3,
 			texture = entity_get_texture_color_agnostic(.swordsman),
 			play = proc(
@@ -214,7 +217,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			id = .bomber,
 			name = "Bomber",
 			kind = Card_Kind.piece,
-			description = "TODO: description",
+			description = "Moves forward as far\nas it can before placing\na bomb and fleeing.\nBombs explode,\ndestroying all pieces\nin a 3x3 area",
 			cost = 3,
 			texture = entity_get_texture_color_agnostic(.bomber),
 			play = proc(
@@ -240,7 +243,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			id = .king,
 			name = "King",
 			kind = Card_Kind.piece,
-			description = "TODO: description",
+			description = "Moves forward\nAllows spawning pieces\nin a 3x3 area around it",
 			cost = 4,
 			texture = entity_get_texture_color_agnostic(.king),
 			play = proc(
@@ -266,8 +269,9 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			id = .adrenaline,
 			name = "Adrenaline",
 			kind = Card_Kind.spell,
-			description = "Trigger a piece twice. It won't trigger until the start of your next turn",
+			description = "Trigger a piece twice.\nIt won't trigger until\nthe start of your\nnext turn",
 			cost = 2,
+			texture = get_texture_as_agnostic(.adrenaline),
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
@@ -296,6 +300,7 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			kind = Card_Kind.spell,
 			description = "Give a piece the ability to capture",
 			cost = 3,
+			texture = get_texture_as_agnostic(.give_arms),
 			play = proc(
 				world: ^World,
 				color: Piece_Color,
@@ -313,8 +318,9 @@ card_get :: proc(card_id: Card_Id) -> Card {
 			id = .halt,
 			name = "Halt",
 			kind = Card_Kind.spell,
-			description = "Move a piece to its previous position",
+			description = "Move a piece to\nits previous position",
 			cost = 1,
+			texture = get_texture_as_agnostic(.halt),
 			play = proc(
 				world: ^World,
 				color: Piece_Color,

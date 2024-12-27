@@ -163,3 +163,13 @@ entity_get_texture_color_agnostic :: proc(
 	ctx := get_context()
 	return ctx.graphics.sprites_pieces[kind]
 }
+
+get_texture_as_agnostic :: proc(
+	sprite_id: Sprite_Id,
+) -> Texture_Color_Agnostic {
+	ctx := get_context()
+	return Texture_Color_Agnostic {
+		black = ctx.graphics.sprites[sprite_id],
+		white = ctx.graphics.sprites[sprite_id],
+	}
+}

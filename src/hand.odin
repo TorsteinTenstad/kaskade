@@ -74,7 +74,7 @@ hand_step :: proc(ctx: ^Client_Context) {
 			card.target_scale = 1.5 * ctx.graphics.gui_scale
 			card.target_position =
 				_card_position(hover_index, len(hand.cards), card_size) +
-				FVec2{0, -CARD_HEIGHT / 2}
+				FVec2{0, -card_size[1] / 2}
 
 			hoverable_rect := card_get_rect(card)
 			hoverable_rect.height += card_size[1]
