@@ -348,7 +348,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			name = "Poisonous Bush",
 			category = Card_Category.piece,
 			description = "Does not move\nPieces that capture it\nare destroyed",
-			cost = 1,
+			cost = 2,
 			texture = entity_get_texture_color_agnostic(.poisonous_bush),
 			play = proc(
 				world: ^World,
