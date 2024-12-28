@@ -170,7 +170,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			name = "Ranger",
 			category = Card_Category.piece,
 			description = "@Capturing\nIf an enemy piece\nis visible on a diagonal,\ncapture it",
-			cost = 3,
+			cost = 4,
 			texture = entity_get_texture_color_agnostic(.ranger),
 			play = proc(
 				world: ^World,
@@ -304,7 +304,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			kind = .give_arms,
 			name = "Give Arms",
 			category = Card_Category.spell,
-			description = "Give a piece the ability to capture",
+			description = "Give a piece the\nability to capture",
 			cost = 3,
 			texture = get_texture_as_agnostic(.give_arms),
 			play = proc(
