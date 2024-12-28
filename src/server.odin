@@ -273,6 +273,7 @@ game_update_from_message :: proc(
 
 			for id in entity_ids {
 				entity := world_get_entity(world, id).(^Entity) or_continue
+				if entity.kind == Entity_Kind.bomb do continue
 				if player_in_win_zone(entity.color, entity.position) {
 					log_magenta(entity.color, "gained 1 point")
 					if entity.color == Piece_Color.white {
