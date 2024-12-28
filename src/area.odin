@@ -16,7 +16,10 @@ area_is_inside :: proc(area: Area, src_pos: IVec2, check_pos: IVec2) -> bool {
 			abs(src_pos.y - check_pos.y) <= 1 \
 		)
 	case .left_right:
-		return abs(src_pos.x - check_pos.x) <= 1 && src_pos.y == check_pos.y
+		return(
+			(check_pos.x == src_pos.x - 1 || check_pos.x == src_pos.x + 1) &&
+			src_pos.y == check_pos.y \
+		)
 	}
 	assert(false, "non-exhaustive")
 	return false
