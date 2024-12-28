@@ -164,12 +164,16 @@ hand_play :: proc(
 	return true
 }
 
+hand_generate_handle :: proc(kind: Card_Kind) -> Card_Handle {
+	return Card_Handle{kind = kind, id = rand.uint64()}
+}
+
 hand_draw_from_deck :: proc(hand: ^Hand, deck: ^Deck) -> bool {
 	if len(hand.cards) >= CARDS_MAX do return false
 	if len(deck.cards) == 0 do return false
 
 	card_kind := pop(&deck.cards)
-	append(&hand.cards, Card_Handle{kind = card_kind, id = rand.uint64()})
+	append(&hand.cards, hand_generate_handle(card_kind))
 	return true
 }
 

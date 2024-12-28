@@ -51,16 +51,28 @@ player_in_win_zone :: proc(player: Piece_Color, pos: IVec2) -> bool {
 	return false
 }
 
-player_close_to_king :: proc(
+player_in_spawn_aura :: proc(
 	world: ^World,
 	player: Piece_Color,
 	pos: IVec2,
 ) -> bool {
 	for &entity in world.entities {
-		if entity.kind == .king && entity.color == player {
-			distance_vec := pos - entity.position
-			return abs(distance_vec.x) <= 1 && abs(distance_vec.y) <= 1
-		}
+		if entity.color != player do continue
+		area := entity.spawn_aura.(Area) or_continue
+		if area_is_inside(area, entity.position, pos) do return true
+	}
+	return false
+}
+
+player_in_immune_aura :: proc(
+	world: ^World,
+	player: Piece_Color,
+	pos: IVec2,
+) -> bool {
+	for &entity in world.entities {
+		if entity.color != player do continue
+		area := entity.immune_aura.(Area) or_continue
+		if area_is_inside(area, entity.position, pos) do return true
 	}
 	return false
 }
@@ -68,7 +80,7 @@ player_close_to_king :: proc(
 player_try_place_entity :: proc(world: ^World, entity: Entity) -> Maybe(int) {
 	if world_is_empty(world, entity.position) &&
 	   (player_in_spawn_zone(entity.color, entity.position) ||
-			   player_close_to_king(world, entity.color, entity.position)) {
+			   player_in_spawn_aura(world, entity.color, entity.position)) {
 		return world_add_entity(world, entity)
 	}
 	return nil
@@ -183,6 +195,7 @@ world_try_move_entity :: proc(
 	if occupied {
 		can_capture := entity.capturing && other_entity.color != entity.color
 		if !can_capture do return false
+		if player_in_immune_aura(world, other_entity.color, target) do return false
 		world_move_entity(world, entity, target)
 		poisonous := other_entity.poisonous
 		entity_id := entity.id

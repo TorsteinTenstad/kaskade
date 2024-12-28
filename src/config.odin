@@ -29,7 +29,7 @@ CARD_HEIGHT :: 200.0
 CARDS_STARTING :: 3
 CARDS_MAX :: 10
 CARDS_DRAWN :: 2
-MANA_MAX :: 5
+MANA_MAX :: 6
 
 FONT_DEFAULT :: Font_Id.lilita_one_regular
 

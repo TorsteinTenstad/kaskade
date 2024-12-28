@@ -264,7 +264,7 @@ game_update_from_message :: proc(
 				)
 				if entity.color != game_state.active_color do continue
 				if entity.exhausted_for_turns > 0 do continue
-				entity_run_action(world, entity)
+				entity_run_action(game_state, entity)
 			}
 		}
 		{
@@ -295,9 +295,23 @@ game_update_from_message :: proc(
 		if game_state.active_color == Piece_Color.black {
 			game_state.active_color = Piece_Color.white
 			game_state.white.mana = game_state.mana
+
+			for &entity in world.entities { 	// TODO: If we do more mana manipulation, we should have better systems
+				if entity.kind == Entity_Kind.library &&
+				   entity.color == Piece_Color.white {
+					game_state.white.mana += 1
+				}
+			}
 		} else {
 			game_state.active_color = Piece_Color.black
 			game_state.black.mana = game_state.mana
+
+			for &entity in world.entities { 	// TODO: If we do more mana manipulation, we should have better systems
+				if entity.kind == Entity_Kind.library &&
+				   entity.color == Piece_Color.black {
+					game_state.black.mana += 1
+				}
+			}
 		}
 
 		log_magenta(game_state.active_color, "to play")
@@ -314,11 +328,7 @@ game_update_from_message :: proc(
 			card_handle := player.hand.cards[card_action.card_idx]
 			card := card_get(card_handle.kind)
 			if card.cost <= player.mana {
-				if card.play(
-					&game_state.world,
-					player.color,
-					card_action.target,
-				) {
+				if card.play(game_state, player.color, card_action.target) {
 					log_magenta(
 						game_state.active_color,
 						"played",

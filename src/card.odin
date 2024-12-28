@@ -15,6 +15,11 @@ Card_Kind :: enum {
 	give_arms,
 	halt,
 	poisonous_bush,
+	guard,
+	armory,
+	market,
+	university,
+	library,
 }
 
 Card_Category :: enum {
@@ -34,7 +39,7 @@ Card :: struct {
 	category:    Card_Category,
 	cost:        int,
 	texture:     Texture_Color_Agnostic,
-	play:        proc(_: ^World, _: Piece_Color, _: IVec2) -> bool,
+	play:        proc(_: ^Server_Game_State, _: Piece_Color, _: IVec2) -> bool,
 }
 
 card_draw_gui :: proc(card: ^Physical_Card) {
@@ -121,13 +126,13 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			cost = 1,
 			texture = entity_get_texture_color_agnostic(.squire),
 			play = proc(
-				world: ^World,
+				game_state: ^Server_Game_State,
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
 				return(
 					player_try_place_entity(
-						world,
+						&game_state.world,
 						Entity {
 							kind = .squire,
 							color = color,
@@ -147,13 +152,13 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			cost = 2,
 			texture = entity_get_texture_color_agnostic(.knight),
 			play = proc(
-				world: ^World,
+				game_state: ^Server_Game_State,
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
 				return(
 					player_try_place_entity(
-						world,
+						&game_state.world,
 						Entity {
 							kind = .knight,
 							color = color,
@@ -173,13 +178,13 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			cost = 4,
 			texture = entity_get_texture_color_agnostic(.ranger),
 			play = proc(
-				world: ^World,
+				game_state: ^Server_Game_State,
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
 				return(
 					player_try_place_entity(
-						world,
+						&game_state.world,
 						Entity {
 							kind = .ranger,
 							color = color,
@@ -200,13 +205,13 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			cost = 3,
 			texture = entity_get_texture_color_agnostic(.swordsman),
 			play = proc(
-				world: ^World,
+				game_state: ^Server_Game_State,
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
 				return(
 					player_try_place_entity(
-						world,
+						&game_state.world,
 						Entity {
 							kind = .swordsman,
 							capturing = true,
@@ -227,13 +232,13 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			cost = 3,
 			texture = entity_get_texture_color_agnostic(.bomber),
 			play = proc(
-				world: ^World,
+				game_state: ^Server_Game_State,
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
 				return(
 					player_try_place_entity(
-						world,
+						&game_state.world,
 						Entity {
 							kind = .bomber,
 							color = color,
@@ -253,17 +258,18 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			cost = 4,
 			texture = entity_get_texture_color_agnostic(.king),
 			play = proc(
-				world: ^World,
+				game_state: ^Server_Game_State,
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
 				return(
 					player_try_place_entity(
-						world,
+						&game_state.world,
 						Entity {
 							kind = .king,
 							color = color,
 							position = position,
+							spawn_aura = .square3x3,
 						},
 					) !=
 					nil \
@@ -279,21 +285,24 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			cost = 2,
 			texture = get_texture_as_agnostic(.adrenaline),
 			play = proc(
-				world: ^World,
+				game_state: ^Server_Game_State,
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				entity := world_get_entity(world, position).(^Entity) or_return
+				entity := world_get_entity(
+					&game_state.world,
+					position,
+				).(^Entity) or_return
 				entity_id := entity.id
 				entity.exhausted_for_turns = 2
-				entity_run_action(world, entity)
+				entity_run_action(game_state, entity)
 
 				entity_fresh_ptr, not_dead := world_get_entity(
-					world,
+					&game_state.world,
 					entity_id,
 				).(^Entity)
 				if not_dead {
-					entity_run_action(world, entity_fresh_ptr)
+					entity_run_action(game_state, entity_fresh_ptr)
 				}
 
 				return true
@@ -308,14 +317,17 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			cost = 3,
 			texture = get_texture_as_agnostic(.give_arms),
 			play = proc(
-				world: ^World,
+				game_state: ^Server_Game_State,
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				entity, found := world_get_entity(world, position).(^Entity)
+				entity, found := world_get_entity(
+					&game_state.world,
+					position,
+				).(^Entity)
 				found or_return
 				entity.capturing = true
-				world_push_entity_history(world)
+				world_push_entity_history(&game_state.world)
 				return true
 			},
 		}
@@ -328,14 +340,17 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			cost = 1,
 			texture = get_texture_as_agnostic(.halt),
 			play = proc(
-				world: ^World,
+				game_state: ^Server_Game_State,
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
-				entity, found := world_get_entity(world, position).(^Entity)
+				entity, found := world_get_entity(
+					&game_state.world,
+					position,
+				).(^Entity)
 				found or_return
 				ok := world_try_move_entity(
-					world,
+					&game_state.world,
 					entity,
 					entity.position_prev,
 				)
@@ -351,17 +366,148 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			cost = 2,
 			texture = entity_get_texture_color_agnostic(.poisonous_bush),
 			play = proc(
-				world: ^World,
+				game_state: ^Server_Game_State,
 				color: Piece_Color,
 				position: IVec2,
 			) -> bool {
 				return(
 					player_try_place_entity(
-						world,
+						&game_state.world,
 						Entity {
 							kind = .poisonous_bush,
 							color = color,
 							poisonous = true,
+							position = position,
+						},
+					) !=
+					nil \
+				)
+			},
+		}
+	case .guard:
+		return Card {
+			kind = .guard,
+			name = "Guard",
+			category = Card_Category.piece,
+			description = "Makes the piece\nto the left\nand right",
+			cost = 3,
+			texture = entity_get_texture_color_agnostic(.guard),
+			play = proc(
+				game_state: ^Server_Game_State,
+				color: Piece_Color,
+				position: IVec2,
+			) -> bool {
+				return(
+					player_try_place_entity(
+						&game_state.world,
+						Entity {
+							kind = .guard,
+							color = color,
+							position = position,
+							immune_aura = .square3x3,
+						},
+					) !=
+					nil \
+				)
+			},
+		}
+	case .armory:
+		return Card {
+			kind = .armory,
+			name = "Armory",
+			category = Card_Category.piece,
+			description = "Gives all pieces\nthe ability\nto capture",
+			cost = 6,
+			texture = entity_get_texture_color_agnostic(.armory),
+			play = proc(
+				game_state: ^Server_Game_State,
+				color: Piece_Color,
+				position: IVec2,
+			) -> bool {
+				return(
+					player_try_place_entity(
+						&game_state.world,
+						Entity {
+							kind = .armory,
+							color = color,
+							position = position,
+						},
+					) !=
+					nil \
+				)
+			},
+		}
+	case .market:
+		return Card {
+			kind = .market,
+			name = "Market",
+			category = Card_Category.piece,
+			description = "Draw a card",
+			cost = 4,
+			texture = entity_get_texture_color_agnostic(.market),
+			play = proc(
+				game_state: ^Server_Game_State,
+				color: Piece_Color,
+				position: IVec2,
+			) -> bool {
+				return(
+					player_try_place_entity(
+						&game_state.world,
+						Entity {
+							kind = .market,
+							color = color,
+							position = position,
+						},
+					) !=
+					nil \
+				)
+			},
+		}
+	case .university:
+		return Card {
+			kind = .university,
+			name = "University",
+			category = Card_Category.piece,
+			description = "Draw a squire card",
+			cost = 5,
+			texture = entity_get_texture_color_agnostic(.university),
+			play = proc(
+				game_state: ^Server_Game_State,
+				color: Piece_Color,
+				position: IVec2,
+			) -> bool {
+				return(
+					player_try_place_entity(
+						&game_state.world,
+						Entity {
+							kind = .university,
+							color = color,
+							position = position,
+						},
+					) !=
+					nil \
+				)
+			},
+		}
+	case .library:
+		return Card {
+			kind = .library,
+			name = "Library",
+			category = Card_Category.piece,
+			description = "+1 to max mana",
+			cost = 4,
+			texture = entity_get_texture_color_agnostic(.library),
+			play = proc(
+				game_state: ^Server_Game_State,
+				color: Piece_Color,
+				position: IVec2,
+			) -> bool {
+				return(
+					player_try_place_entity(
+						&game_state.world,
+						Entity {
+							kind = .library,
+							color = color,
 							position = position,
 						},
 					) !=

@@ -12,6 +12,11 @@ Entity_Kind :: enum {
 	bomber,
 	bomb,
 	poisonous_bush,
+	guard,
+	armory,
+	market,
+	university,
+	library,
 }
 
 Piece_Color :: enum {
@@ -26,6 +31,8 @@ Entity :: struct {
 	position:            IVec2,
 	position_prev:       IVec2,
 	position_draw:       FVec2,
+	spawn_aura:          Maybe(Area),
+	immune_aura:         Maybe(Area),
 	capturing:           bool,
 	poisonous:           bool,
 	exhausted_for_turns: int,
@@ -49,25 +56,33 @@ entity_direction_y :: proc(color: Piece_Color) -> IVec2 {
 	return IVec2{0, -1}
 }
 
-entity_run_action :: proc(world: ^World, entity: ^Entity) {
+entity_run_action :: proc(game_state: ^Server_Game_State, entity: ^Entity) {
 	dir_x := entity_direction_x(entity.color)
 	dir_y := entity_direction_y(entity.color)
 
 	switch entity.kind {
 	case .squire:
-		world_try_move_entity(world, entity, entity.position + dir_y)
+		world_try_move_entity(
+			&game_state.world,
+			entity,
+			entity.position + dir_y,
+		)
 	case .knight:
 		position_prev := entity.position
-		world_try_move_entity(world, entity, entity.position + dir_y)
-		for !world_is_empty(world, entity.position + dir_y) {
+		world_try_move_entity(
+			&game_state.world,
+			entity,
+			entity.position + dir_y,
+		)
+		for !world_is_empty(&game_state.world, entity.position + dir_y) {
 			if world_try_move_entity(
-				world,
+				&game_state.world,
 				entity,
 				entity.position + dir_y + dir_x,
 			) {continue}
 
 			if world_try_move_entity(
-				world,
+				&game_state.world,
 				entity,
 				entity.position + dir_y - dir_x,
 			) {continue}
@@ -88,8 +103,12 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 		for direction in directions {
 			for i in 1 ..< max(BOARD_WIDTH, BOARD_HEIGHT) {
 				position := entity.position + direction * i
-				if !world_is_empty(world, position) {
-					if world_try_move_entity(world, entity, position) {
+				if !world_is_empty(&game_state.world, position) {
+					if world_try_move_entity(
+						&game_state.world,
+						entity,
+						position,
+					) {
 						return
 					} else {
 						break
@@ -98,11 +117,19 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 			}
 		}
 	case .swordsman:
-		world_try_move_entity(world, entity, entity.position + dir_y)
+		world_try_move_entity(
+			&game_state.world,
+			entity,
+			entity.position + dir_y,
+		)
 	case .bomber:
-		for world_try_move_entity(world, entity, entity.position + dir_y) {}
+		for world_try_move_entity(
+			    &game_state.world,
+			    entity,
+			    entity.position + dir_y,
+		    ) {}
 		world_add_entity(
-			world,
+			&game_state.world,
 			Entity {
 				kind = .bomb,
 				color = entity.color,
@@ -111,22 +138,56 @@ entity_run_action :: proc(world: ^World, entity: ^Entity) {
 				position_draw = f_vec_2(entity.position),
 			},
 		)
-		world_remove_entity(world, entity.id)
+		world_remove_entity(&game_state.world, entity.id)
 	case .bomb:
-		entity_ids := world_get_entity_ids(world)
+		entity_ids := world_get_entity_ids(&game_state.world)
 		defer delete(entity_ids)
 		entity_position := entity.position
 		for id in entity_ids {
-			other_entity := world_get_entity(world, id).(^Entity) or_continue
+			other_entity := world_get_entity(
+				&game_state.world,
+				id,
+			).(^Entity) or_continue
 			distance_vec := entity_position - other_entity.position
 			if abs(distance_vec.x) <= 1 && abs(distance_vec.y) <= 1 {
-				world_remove_entity(world, other_entity.id)
+				world_remove_entity(&game_state.world, other_entity.id)
 
 			}
 		}
 	case .king:
-		world_try_move_entity(world, entity, entity.position + dir_y)
+		world_try_move_entity(
+			&game_state.world,
+			entity,
+			entity.position + dir_y,
+		)
 	case .poisonous_bush:
+	case .guard:
+		world_try_move_entity(
+			&game_state.world,
+			entity,
+			entity.position + dir_y,
+		)
+	case .armory:
+		for &other_entity in &game_state.world.entities {
+			if other_entity.color == entity.color {
+				other_entity.capturing = true
+			}
+		}
+	case .market:
+		switch entity.color {
+		case .black:
+			hand_draw_from_deck(&game_state.black.hand, &game_state.black.deck)
+		case .white:
+			hand_draw_from_deck(&game_state.white.hand, &game_state.white.deck)
+		}
+	case .university:
+		switch entity.color {
+		case .black:
+			append(&game_state.black.hand.cards, hand_generate_handle(.squire))
+		case .white:
+			append(&game_state.white.hand.cards, hand_generate_handle(.squire))
+		}
+	case .library:
 	}
 }
 
