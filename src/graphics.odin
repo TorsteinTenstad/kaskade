@@ -5,15 +5,27 @@ import "core:strings"
 import rl "vendor:raylib"
 
 Graphics :: struct {
-	sprites:        map[Sprite_Id]rl.Texture,
-	sprites_pieces: map[Entity_Kind]Texture_Color_Agnostic,
-	fonts:          map[Font_Id]rl.Font,
-	surface:        rl.RenderTexture2D,
-	camera:         Camera,
-	gui_scale:      f32,
+	sprite_sheet: rl.Texture2D,
+	fonts:        map[Font_Id]rl.Font,
+	surface:      rl.RenderTexture2D,
+	camera:       Camera,
+	gui_scale:    f32,
 }
 
 Sprite_Id :: enum {
+	squire,
+	knight,
+	ranger,
+	swordsman,
+	king,
+	bomber,
+	bomb,
+	poisonous_bush,
+	guard,
+	armory,
+	market,
+	university,
+	library,
 	icon_capturing,
 	icon_haste,
 	icon_exhausted,
@@ -22,13 +34,26 @@ Sprite_Id :: enum {
 	give_arms,
 }
 
-_sprite_paths := [Sprite_Id]string {
-	.icon_capturing = "sprites/icons/capturing.png",
-	.icon_haste     = "sprites/icons/haste.png",
-	.icon_exhausted = "sprites/icons/exhausted.png",
-	.adrenaline     = "sprites/adrenaline.png",
-	.halt           = "sprites/halt.png",
-	.give_arms      = "sprites/give_arms.png",
+_sprite_sheet_positions: [Sprite_Id]IVec2 = {
+	.squire         = {cast(int)Sprite_Id.squire, 0},
+	.knight         = {cast(int)Sprite_Id.knight, 0},
+	.ranger         = {cast(int)Sprite_Id.ranger, 0},
+	.swordsman      = {cast(int)Sprite_Id.swordsman, 0},
+	.king           = {cast(int)Sprite_Id.king, 0},
+	.bomber         = {cast(int)Sprite_Id.bomber, 0},
+	.bomb           = {cast(int)Sprite_Id.bomb, 0},
+	.poisonous_bush = {cast(int)Sprite_Id.poisonous_bush, 0},
+	.guard          = {cast(int)Sprite_Id.guard, 0},
+	.armory         = {cast(int)Sprite_Id.armory, 0},
+	.market         = {cast(int)Sprite_Id.market, 0},
+	.university     = {cast(int)Sprite_Id.university, 0},
+	.library        = {cast(int)Sprite_Id.library, 0},
+	.adrenaline     = {0, 2},
+	.give_arms      = {1, 2},
+	.halt           = {2, 2},
+	.icon_capturing = {0, 3},
+	.icon_exhausted = {1, 3},
+	.icon_haste     = {2, 3},
 }
 
 Font_Id :: enum {
@@ -61,8 +86,10 @@ graphics_create :: proc(ctx: ^Client_Context) {
 		rl.SetWindowPosition(1920, 32)
 	}
 
-	ctx.graphics.sprites = _load_sprites()
-	ctx.graphics.sprites_pieces = _load_sprites_pieces()
+	path_sprite_sheet := strings.concatenate(
+		{ASSETS_PATH, "sprites/spritesheet.png"},
+	)
+	ctx.graphics.sprite_sheet = rl.LoadTexture(cstr(path_sprite_sheet))
 	ctx.graphics.fonts = _load_fonts()
 	rl.GuiSetFont(ctx.graphics.fonts[Font_Id.lilita_one_regular])
 
@@ -81,55 +108,6 @@ graphics_create :: proc(ctx: ^Client_Context) {
 }
 
 @(private = "file")
-_load_sprites :: proc() -> map[Sprite_Id]rl.Texture {
-	m := make(map[Sprite_Id]rl.Texture)
-
-	for sprite_id in Sprite_Id {
-		sprite_path := _sprite_paths[sprite_id]
-		full_path := strings.concatenate({ASSETS_PATH, sprite_path})
-		texture := rl.LoadTexture(cstr(full_path))
-		if texture.id == 0 {
-			log_red("Could not find sprite", sprite_path)
-		}
-		m[sprite_id] = texture
-	}
-	return m
-}
-
-@(private = "file")
-_load_sprites_pieces :: proc() -> map[Entity_Kind]Texture_Color_Agnostic {
-	m := make(map[Entity_Kind]Texture_Color_Agnostic)
-
-	for sprite_id in Entity_Kind {
-		sprites_path := "sprites/pieces/"
-		texture: Texture_Color_Agnostic
-
-		path_black := strings.concatenate(
-			{ASSETS_PATH, sprites_path, "pink/", format(sprite_id), ".png"},
-		)
-		texture_black := rl.LoadTexture(cstr(path_black))
-		if texture_black.id == 0 {
-			log_red("Could not find sprite", path_black)
-		} else {
-			texture.black = texture_black
-		}
-
-		path_white := strings.concatenate(
-			{ASSETS_PATH, sprites_path, "green/", format(sprite_id), ".png"},
-		)
-		texture_white := rl.LoadTexture(cstr(path_white))
-		if texture_white.id == 0 {
-			log_red("Could not find sprite", path_white)
-		} else {
-			texture.white = texture_white
-		}
-
-		m[sprite_id] = texture
-	}
-	return m
-}
-
-@(private = "file")
 _load_fonts :: proc() -> map[Font_Id]rl.Font {
 	m := make(map[Font_Id]rl.Font)
 
@@ -140,4 +118,52 @@ _load_fonts :: proc() -> map[Font_Id]rl.Font {
 		rl.SetTextureFilter(m[font_id].texture, rl.TextureFilter.BILINEAR)
 	}
 	return m
+}
+
+sprite_draw_from_sprite_sheet :: proc(
+	sprite_pos: IVec2,
+	position: FVec2,
+	scale: f32,
+) {
+	ctx := get_context()
+	source: rl.Rectangle = {
+		x      = GRID_SIZE * f32(sprite_pos.x),
+		y      = GRID_SIZE * f32(sprite_pos.y),
+		width  = GRID_SIZE,
+		height = GRID_SIZE,
+	}
+	dest: rl.Rectangle = {
+		x      = f32(position.x),
+		y      = f32(position.y),
+		width  = GRID_SIZE * scale,
+		height = GRID_SIZE * scale,
+	}
+	rl.DrawTexturePro(
+		ctx.graphics.sprite_sheet,
+		source,
+		dest,
+		{0, 0},
+		0,
+		rl.WHITE,
+	)
+}
+
+sprite_draw_entity :: proc(
+	kind: Entity_Kind,
+	color: Piece_Color,
+	position: FVec2,
+	scale: f32,
+) {
+	sprite_id := _entity_sprite_ids[kind]
+	sprite_draw(sprite_id, position, scale, {0, cast(int)color})
+}
+
+sprite_draw :: proc(
+	sprite_id: Sprite_Id,
+	position: FVec2,
+	scale: f32,
+	offset: IVec2 = {0, 0},
+) {
+	sprite_pos := _sprite_sheet_positions[sprite_id]
+	sprite_draw_from_sprite_sheet(sprite_pos + offset, position, scale)
 }

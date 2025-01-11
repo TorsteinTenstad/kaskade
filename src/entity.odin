@@ -1,8 +1,6 @@
 #+vet unused shadowing using-stmt style semicolon
 package main
 
-import rl "vendor:raylib"
-
 Entity_Kind :: enum {
 	squire,
 	knight,
@@ -38,9 +36,20 @@ Entity :: struct {
 	exhausted_for_turns: int,
 }
 
-Texture_Color_Agnostic :: struct {
-	black: rl.Texture2D,
-	white: rl.Texture2D,
+_entity_sprite_ids: map[Entity_Kind]Sprite_Id = {
+	.squire         = .squire,
+	.knight         = .knight,
+	.ranger         = .ranger,
+	.swordsman      = .swordsman,
+	.king           = .king,
+	.bomber         = .bomber,
+	.bomb           = .bomb,
+	.poisonous_bush = .poisonous_bush,
+	.guard          = .guard,
+	.armory         = .armory,
+	.market         = .market,
+	.university     = .university,
+	.library        = .library,
 }
 
 entity_direction_x :: proc(color: Piece_Color) -> IVec2 {
@@ -193,47 +202,16 @@ entity_run_action :: proc(game_state: ^Server_Game_State, entity: ^Entity) {
 
 entity_draw :: proc(entity: ^Entity, position_draw: FVec2) {
 	graphics := &get_context().graphics
-	texture := entity_get_texture(entity)
 	surface_position := camera_world_to_surface(
 		&graphics.camera,
 		position_draw,
 	)
-	rl.DrawTextureEx(texture, surface_position, 0, 1.0, rl.WHITE)
+	sprite_draw_entity(entity.kind, entity.color, surface_position, 1)
+
 	if entity.capturing {
-		texture_capturing := graphics.sprites[Sprite_Id.icon_capturing]
-		rl.DrawTextureEx(texture_capturing, surface_position, 0, 1.0, rl.WHITE)
+		sprite_draw(.icon_capturing, surface_position, 1)
 	}
 	if entity.exhausted_for_turns > 0 {
-		texture_exhausted := graphics.sprites[Sprite_Id.icon_exhausted]
-		rl.DrawTextureEx(texture_exhausted, surface_position, 0, 1.0, rl.WHITE)
-	}
-}
-
-entity_get_texture :: proc(entity: ^Entity) -> rl.Texture2D {
-	texture := entity_get_texture_color_agnostic(entity.kind)
-	if entity.color == Piece_Color.black {
-		return texture.black
-	} else {
-		return texture.white
-	}
-}
-
-entity_get_texture_color_agnostic :: proc(
-	kind: Entity_Kind,
-) -> Texture_Color_Agnostic {
-	// is_moving :=
-	// 	entity.position_draw.x - math.floor(entity.position_draw.x) != 0 ||
-	// 	entity.position_draw.y - math.floor(entity.position_draw.y) != 0
-	ctx := get_context()
-	return ctx.graphics.sprites_pieces[kind]
-}
-
-get_texture_as_agnostic :: proc(
-	sprite_id: Sprite_Id,
-) -> Texture_Color_Agnostic {
-	ctx := get_context()
-	return Texture_Color_Agnostic {
-		black = ctx.graphics.sprites[sprite_id],
-		white = ctx.graphics.sprites[sprite_id],
+		sprite_draw(.icon_exhausted, surface_position, 1)
 	}
 }

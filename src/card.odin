@@ -38,7 +38,7 @@ Card :: struct {
 	description: string,
 	category:    Card_Category,
 	cost:        int,
-	texture:     Texture_Color_Agnostic,
+	sprite_id:   Sprite_Id,
 	play:        proc(_: ^Server_Game_State, _: Piece_Color, _: IVec2) -> bool,
 }
 
@@ -86,10 +86,14 @@ card_draw_gui :: proc(card: ^Physical_Card) {
 		rect.x + rect.width * 0.1,
 		rect.y + rect.height * 0.03,
 	}
-	texture :=
-		ctx.game_state.player_color == Piece_Color.black ? card.card.texture.black : card.card.texture.white
 	image_scale := 4 * card.scale
-	rl.DrawTextureEx(texture, image_position, 0, image_scale, rl.WHITE)
+	color := ctx.game_state.player_color
+	sprite_draw(
+		card.card.sprite_id,
+		image_position,
+		image_scale,
+		{0, cast(int)color},
+	)
 }
 
 card_get_outline_color :: proc(card: ^Card) -> rl.Color {
@@ -124,7 +128,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			category = Card_Category.piece,
 			description = "Moves forward",
 			cost = 1,
-			texture = entity_get_texture_color_agnostic(.squire),
+			sprite_id = .squire,
 			play = proc(
 				game_state: ^Server_Game_State,
 				color: Piece_Color,
@@ -150,7 +154,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			category = Card_Category.piece,
 			description = "Moves forward,\nthen forward diagonally\nuntil there is no piece\ndirectly in front",
 			cost = 2,
-			texture = entity_get_texture_color_agnostic(.knight),
+			sprite_id = .knight,
 			play = proc(
 				game_state: ^Server_Game_State,
 				color: Piece_Color,
@@ -176,7 +180,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			category = Card_Category.piece,
 			description = "@Capturing\nIf an enemy piece\nis visible on a diagonal,\ncapture it",
 			cost = 4,
-			texture = entity_get_texture_color_agnostic(.ranger),
+			sprite_id = .ranger,
 			play = proc(
 				game_state: ^Server_Game_State,
 				color: Piece_Color,
@@ -203,7 +207,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			category = Card_Category.piece,
 			description = "@Capturing\nMoves forward",
 			cost = 3,
-			texture = entity_get_texture_color_agnostic(.swordsman),
+			sprite_id = .swordsman,
 			play = proc(
 				game_state: ^Server_Game_State,
 				color: Piece_Color,
@@ -230,7 +234,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			category = Card_Category.piece,
 			description = "Moves forward as far\nas it can before placing\na bomb and fleeing.\nBombs explode,\ndestroying all pieces\nin a 3x3 area",
 			cost = 3,
-			texture = entity_get_texture_color_agnostic(.bomber),
+			sprite_id = .bomber,
 			play = proc(
 				game_state: ^Server_Game_State,
 				color: Piece_Color,
@@ -256,7 +260,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			category = Card_Category.piece,
 			description = "Moves forward\nAllows spawning pieces\nin a 3x3 area around it",
 			cost = 4,
-			texture = entity_get_texture_color_agnostic(.king),
+			sprite_id = .king,
 			play = proc(
 				game_state: ^Server_Game_State,
 				color: Piece_Color,
@@ -283,7 +287,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			category = Card_Category.spell,
 			description = "Trigger a piece twice.\nIt won't trigger until\nthe start of your\nnext turn",
 			cost = 2,
-			texture = get_texture_as_agnostic(.adrenaline),
+			sprite_id = .adrenaline,
 			play = proc(
 				game_state: ^Server_Game_State,
 				color: Piece_Color,
@@ -315,7 +319,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			category = Card_Category.spell,
 			description = "Give a piece the\nability to capture",
 			cost = 3,
-			texture = get_texture_as_agnostic(.give_arms),
+			sprite_id = .give_arms,
 			play = proc(
 				game_state: ^Server_Game_State,
 				color: Piece_Color,
@@ -338,7 +342,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			category = Card_Category.spell,
 			description = "Move a piece to\nits previous position",
 			cost = 1,
-			texture = get_texture_as_agnostic(.halt),
+			sprite_id = .halt,
 			play = proc(
 				game_state: ^Server_Game_State,
 				color: Piece_Color,
@@ -364,7 +368,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			category = Card_Category.piece,
 			description = "Does not move\nPieces that capture it\nare destroyed",
 			cost = 2,
-			texture = entity_get_texture_color_agnostic(.poisonous_bush),
+			sprite_id = .poisonous_bush,
 			play = proc(
 				game_state: ^Server_Game_State,
 				color: Piece_Color,
@@ -391,7 +395,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			category = Card_Category.piece,
 			description = "Makes the piece\nto the left\nand right",
 			cost = 3,
-			texture = entity_get_texture_color_agnostic(.guard),
+			sprite_id = .guard,
 			play = proc(
 				game_state: ^Server_Game_State,
 				color: Piece_Color,
@@ -418,7 +422,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			category = Card_Category.piece,
 			description = "Gives all pieces\nthe ability\nto capture",
 			cost = 6,
-			texture = entity_get_texture_color_agnostic(.armory),
+			sprite_id = .armory,
 			play = proc(
 				game_state: ^Server_Game_State,
 				color: Piece_Color,
@@ -444,7 +448,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			category = Card_Category.piece,
 			description = "Draw a card",
 			cost = 4,
-			texture = entity_get_texture_color_agnostic(.market),
+			sprite_id = .market,
 			play = proc(
 				game_state: ^Server_Game_State,
 				color: Piece_Color,
@@ -470,7 +474,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			category = Card_Category.piece,
 			description = "Draw a squire card",
 			cost = 5,
-			texture = entity_get_texture_color_agnostic(.university),
+			sprite_id = .university,
 			play = proc(
 				game_state: ^Server_Game_State,
 				color: Piece_Color,
@@ -496,7 +500,7 @@ card_get :: proc(card_id: Card_Kind) -> Card {
 			category = Card_Category.piece,
 			description = "+1 to max mana",
 			cost = 4,
-			texture = entity_get_texture_color_agnostic(.library),
+			sprite_id = .library,
 			play = proc(
 				game_state: ^Server_Game_State,
 				color: Piece_Color,
